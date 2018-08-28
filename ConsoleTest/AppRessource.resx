@@ -118,15 +118,15 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="database" xml:space="preserve">
-    <value />
+    <value>contacts</value>
   </data>
   <data name="pass" xml:space="preserve">
-    <value />
+    <value>MySQLRootPass_123</value>
   </data>
   <data name="url" xml:space="preserve">
-    <value />
+    <value>127.0.0.1</value>
   </data>
   <data name="user" xml:space="preserve">
-    <value />
+    <value>root</value>
   </data>
 </root>

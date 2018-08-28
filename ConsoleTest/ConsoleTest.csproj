@@ -4,7 +4,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{775C59A7-DEBC-48E0-83F4-202AA83EA5AC}</ProjectGuid>
+    <ProjectGuid>{1F8C8385-3D78-4BCF-A370-2ABEFB6E5602}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <RootNamespace>ConsoleTest</RootNamespace>
     <AssemblyName>ConsoleTest</AssemblyName>
@@ -47,6 +47,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>AppRessource.resx</DependentUpon>
     </Compile>
+    <Compile Include="Person.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
