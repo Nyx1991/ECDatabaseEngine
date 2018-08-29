@@ -5,12 +5,16 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Reflection;
 using System.Collections;
+using MySql.Data.MySqlClient;
 
 namespace ECDatabaseEngine
 {
-    public abstract class ECTable : IEnumerator, IEquatable<ECTable>
+    public abstract class ECTable : IEnumerator, IEnumerable, IEquatable<ECTable>
     {
         protected List<ECTable> records;
+        private Dictionary<string, string> filter;
+        private Dictionary<string, KeyValuePair<string, string>> ranges;
+
         int currentRecord;
 
         [TableField(FieldType.INT)]
@@ -21,33 +25,18 @@ namespace ECDatabaseEngine
 
         public object Current => records[currentRecord];
 
+        public int Count => records.Count;
+
+
+
         public ECTable()
         {
             Init();
-        }
-
-        internal ECTable(Dictionary<string, string> _values) : this()
-        {
-            InitFromDictionary(_values);
-        }
-
-        internal void InitFromDictionary(Dictionary<string, string> _values)
-        {
-            Type t = this.GetType();
-            foreach (KeyValuePair<string, string> kv in _values)
-                ConvertAndStore(t.GetProperty(kv.Key), kv.Value);
-        }
+        }       
 
         public void SynchronizeSchema()
         {
-            try
-            {
-                ECDatabaseConnection.SynchronizeSchema(this);
-            }
-            catch (Exception e)
-            {
-                throw e;
-            }            
+            ECDatabaseConnection.SynchronizeSchema(this);          
         }
 
         public void Init()
@@ -56,12 +45,16 @@ namespace ECDatabaseEngine
                 records.Clear();
             else
                 records = new List<ECTable>();
-            currentRecord = 0;
-            Clear();            
+            currentRecord = 0;            
+            filter = new Dictionary<string, string>();
+            ranges = new Dictionary<string, KeyValuePair<string, string>>();
+            Clear();
         }
 
         public void Clear()
         {
+            filter.Clear();
+            ranges.Clear();
             foreach (PropertyInfo p in this.GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute))))
             {
                 Type type = p.PropertyType;
@@ -93,34 +86,39 @@ namespace ECDatabaseEngine
 
         public void Get(int _recId)
         {
-            Init();
             Type t = this.GetType();
-            ECTable table;            
-            foreach (Dictionary<string,string> d in ECDatabaseConnection.ExecuteSql("SELECT * FROM `" + this.GetType().Name + "` WHERE RecId=" + _recId))
-            {
-                table = (ECTable)Activator.CreateInstance(t);
-                table.InitFromDictionary(d);
-                records.Add(table);
-            }
-            if (records.Count == 0)
-            {
-                throw new Exception("No Records with RecId=" + _recId + " found");                
-            }
-            else
-            {
-                currentRecord = 0;                
-                CopyFrom(records.First());
-            }
+            LoadTableDataFromDictionaryList(ECDatabaseConnection.ExecuteSql("SELECT * FROM `" + this.GetType().Name + "` WHERE RecId=" + _recId));            
         }
 
         public void FindSet()
         {
-            Init();
             Type t = this.GetType();
-            ECTable table;
-            foreach (Dictionary<string, string> d in ECDatabaseConnection.ExecuteSql("SELECT * FROM `" + this.GetType().Name + "`;"))
+            string where = "";
+            string sql = "SELECT * FROM `" + this.GetType().Name + "` ";
+
+            foreach (KeyValuePair<string, KeyValuePair<string, string>> kp in ranges.ToArray())
+                if (kp.Value.Value.Equals(""))
+                    where += kp.Key + "='" + kp.Value.Key + "' AND";
+                else
+                    where += "("+kp.Key + " BETWEEN " + kp.Value.Key + " AND " + kp.Value.Value + ") AND";
+
+            foreach (KeyValuePair<string, string> kp in filter.ToArray())
+                where += kp.Key+" "+kp.Value+" AND";
+            if (!where.Equals(""))
             {
-                table = (ECTable)Activator.CreateInstance(t);
+                sql += "WHERE " + where.Substring(0, where.Length - 4) + ";";
+            }
+
+            LoadTableDataFromDictionaryList(ECDatabaseConnection.ExecuteSql(sql));
+        }     
+
+        internal void LoadTableDataFromDictionaryList(List<Dictionary<string,string>> _dataDict)
+        {
+            Init();            
+            ECTable table;
+            foreach (Dictionary<string, string> d in _dataDict)
+            {
+                table = (ECTable)Activator.CreateInstance(this.GetType());
                 table.InitFromDictionary(d);
                 records.Add(table);
             }
@@ -133,6 +131,34 @@ namespace ECDatabaseEngine
                 currentRecord = 0;
                 CopyFrom(records.First());
             }
+        }
+
+        public void SetFilter(string _fieldName, string _filterString="")
+        {
+            if (GetType().GetProperty(_fieldName) == null)
+                new Exception(String.Format("Field with name '{0}' does not exist in {1}", _fieldName, GetType().Name));
+
+            if (filter.Keys.Contains(_fieldName))
+                if (_filterString.Equals(""))
+                    filter.Remove(_fieldName);
+                else
+                    filter[_fieldName] = _filterString;
+            else
+                filter.Add(_fieldName, _filterString);
+        }
+
+        public void SetRange(string _fieldName, string _from = "", string _to="")
+        {
+            if (GetType().GetProperty(_fieldName) == null)
+                new Exception(String.Format("Field with name '{0}' does not exist in {1}", _fieldName, GetType().Name));
+
+            if (ranges.Keys.Contains(_fieldName))
+                if (_from.Equals("") && _to.Equals(""))
+                    ranges.Remove(_fieldName);
+                else
+                    ranges[_fieldName] = new KeyValuePair<string,string>(_from, _to);
+            else
+                ranges.Add(_fieldName, new KeyValuePair<string, string>(_from, _to));
         }
 
         public void Insert()
@@ -163,18 +189,38 @@ namespace ECDatabaseEngine
         {
             ECDatabaseConnection.Modify(this);
             records[currentRecord] = this;
+        }        
+
+        public void CopyFrom(ECTable _table)
+        {
+            PropertyInfo targetPi;
+            foreach (PropertyInfo sourcePi in _table.GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute))))
+                if ((targetPi = GetType().GetProperty(sourcePi.Name)) != null)
+                    targetPi.SetValue(this, sourcePi.GetValue(_table));
         }
+
+        public string DateTimeToSqlDate(DateTime _dt)
+        {
+            return String.Format("{0}-{1}-{2}", _dt.Year, _dt.Month, _dt.Day);
+        }
+
+        public string DateTimeToSqlDateTime(DateTime _dt)
+        {
+            return String.Format("{0}-{1}-{2} {3}:{4}:{5}.{6}", _dt.Year, _dt.Month, _dt.Day, _dt.Hour, _dt.Minute, _dt.Second, _dt.Millisecond);
+        }
+
+
 
         internal string GetValueInSqlFormat(PropertyInfo _p)
         {
             string sql = "";
             TableFieldAttribute tfa = this.GetType().GetCustomAttribute<TableFieldAttribute>();
             tfa = _p.GetCustomAttribute<TableFieldAttribute>();
-            if (tfa.type == FieldType.VARCHAR || tfa.type == FieldType.CHAR)                
+            if (tfa.type == FieldType.VARCHAR || tfa.type == FieldType.CHAR)
                 sql += "'" + _p.GetValue(this).ToString() + "'";
             else if (tfa.type == FieldType.INT || tfa.type == FieldType.DECIMAL || tfa.type == FieldType.FLOAT || tfa.type == FieldType.DOUBLE)
                 sql += _p.GetValue(this).ToString();
-            else if(tfa.type == FieldType.DATE)
+            else if (tfa.type == FieldType.DATE)
             {
                 DateTime dt = (DateTime)_p.GetValue(this);
                 sql = String.Format("'{0}-{1}-{2}'", dt.Year, dt.Month, dt.Day);
@@ -229,7 +275,7 @@ namespace ECDatabaseEngine
                     _p.SetValue(this, Convert.ToDouble(value));
                     break;
 
-                case FieldType.FLOAT:                    
+                case FieldType.FLOAT:
                     _p.SetValue(this, (float)Convert.ToDouble(value));
                     break;
 
@@ -246,24 +292,19 @@ namespace ECDatabaseEngine
             }
         }
 
-        public void CopyFrom(ECTable _table)
+        internal ECTable(Dictionary<string, string> _values) : this()
         {
-            PropertyInfo targetPi;
-            foreach (PropertyInfo sourcePi in _table.GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute))))
-                if ((targetPi = GetType().GetProperty(sourcePi.Name)) != null)
-                    targetPi.SetValue(this, sourcePi.GetValue(_table));
+            InitFromDictionary(_values);
         }
 
-        override
-        public string ToString()
+        internal void InitFromDictionary(Dictionary<string, string> _values)
         {
-            string ret = "";
-
-            foreach(PropertyInfo p in this.GetType().GetProperties().Where( x => x.IsDefined(typeof(TableFieldAttribute))))
-                ret += p.Name+": "+p.GetValue(this)+" \n";
-
-            return ret.Substring(0, ret.Length-2);
+            Type t = this.GetType();
+            foreach (KeyValuePair<string, string> kv in _values)
+                ConvertAndStore(t.GetProperty(kv.Key), kv.Value);
         }
+
+
 
         public bool MoveNext()
         {
@@ -297,5 +338,24 @@ namespace ECDatabaseEngine
 
             return true;
         }
+
+        public IEnumerator GetEnumerator()
+        {
+            return records.GetEnumerator();
+        }
+
+
+        override
+        public string ToString()
+        {
+            string ret = "";
+
+            foreach (PropertyInfo p in this.GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute))))
+                ret += p.Name + ": " + p.GetValue(this) + " \n";
+
+            return ret.Substring(0, ret.Length - 2);
+        }
+
+        
     }
 }
