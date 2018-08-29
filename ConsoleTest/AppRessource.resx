@@ -121,7 +121,7 @@
     <value>contacts</value>
   </data>
   <data name="pass" xml:space="preserve">
-    <value>MySQLRootPass_123</value>
+    <value></value>
   </data>
   <data name="url" xml:space="preserve">
     <value>127.0.0.1</value>
