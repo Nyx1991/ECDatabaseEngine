@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -121,7 +121,7 @@
     <value>contacts</value>
   </data>
   <data name="pass" xml:space="preserve">
-    <value></value>
+    <value>MySQLRootPass_123</value>
   </data>
   <data name="url" xml:space="preserve">
     <value>127.0.0.1</value>

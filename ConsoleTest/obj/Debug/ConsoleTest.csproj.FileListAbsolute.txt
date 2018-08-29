@@ -1,0 +1,14 @@
+E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Debug\ConsoleTest.exe.config
+E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Debug\ConsoleTest.exe
+E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Debug\ECDatabaseEngine.dll
+E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Debug\MySql.Data.dll
+E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Debug\ECDatabaseEngine.pdb
+E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Debug\MySql.Data.xml
+E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\obj\Debug\ConsoleTest.AppRessource.resources
+E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\obj\Debug\ConsoleTest.csproj.GenerateResource.cache
+E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\obj\Debug\ConsoleTest.csproj.CoreCompileInputs.cache
+E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\obj\Debug\ConsoleTest.csproj.CopyComplete
+E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\obj\Debug\ConsoleTest.exe
+E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\obj\Debug\ConsoleTest.pdb
+E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Debug\ConsoleTest.pdb
+E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\obj\Debug\ConsoleTest.csprojResolveAssemblyReference.cache
