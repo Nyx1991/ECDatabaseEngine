@@ -70,7 +70,7 @@ namespace ConsoleTest {
         }
         
         /// <summary>
-        ///   Sucht eine lokalisierte Zeichenfolge, die  ähnelt.
+        ///   Sucht eine lokalisierte Zeichenfolge, die MySQLRootPass_123 ähnelt.
         /// </summary>
         internal static string pass {
             get {

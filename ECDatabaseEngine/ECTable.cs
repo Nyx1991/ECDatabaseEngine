@@ -85,31 +85,16 @@ namespace ECDatabaseEngine
         }
 
         public void Get(int _recId)
-        {
-            Type t = this.GetType();
-            LoadTableDataFromDictionaryList(ECDatabaseConnection.ExecuteSql("SELECT * FROM `" + this.GetType().Name + "` WHERE RecId=" + _recId));            
+        {            
+            filter = new Dictionary<string, string>();
+            filter.Add("RecId", "="+_recId.ToString());
+            LoadTableDataFromDictionaryList(ECDatabaseConnection.Connection.GetData(this, filter, 
+                                                                                    new Dictionary<string, KeyValuePair<string, string>>()));
         }
 
         public void FindSet()
-        {
-            Type t = this.GetType();
-            string where = "";
-            string sql = "SELECT * FROM `" + this.GetType().Name + "` ";
-
-            foreach (KeyValuePair<string, KeyValuePair<string, string>> kp in ranges.ToArray())
-                if (kp.Value.Value.Equals(""))
-                    where += kp.Key + "='" + kp.Value.Key + "' AND";
-                else
-                    where += "("+kp.Key + " BETWEEN " + kp.Value.Key + " AND " + kp.Value.Value + ") AND";
-
-            foreach (KeyValuePair<string, string> kp in filter.ToArray())
-                where += kp.Key+" "+kp.Value+" AND";
-            if (!where.Equals(""))
-            {
-                sql += "WHERE " + where.Substring(0, where.Length - 4) + ";";
-            }
-
-            LoadTableDataFromDictionaryList(ECDatabaseConnection.ExecuteSql(sql));
+        {            
+            LoadTableDataFromDictionaryList(ECDatabaseConnection.Connection.GetData(this, filter, ranges));
         }     
 
         internal void LoadTableDataFromDictionaryList(List<Dictionary<string,string>> _dataDict)
@@ -124,7 +109,7 @@ namespace ECDatabaseEngine
             }
             if (records.Count == 0)
             {
-                throw new Exception("No Records with found");
+                Clear();
             }
             else
             {
@@ -163,9 +148,8 @@ namespace ECDatabaseEngine
 
         public void Insert()
         { 
-            RecId = ECDatabaseConnection.Insert(this);
-            records.Add(this);
-            currentRecord = records.IndexOf(this);
+            RecId = ECDatabaseConnection.Connection.Insert(this);
+            FindSet();
         }
 
         public void Delete()
@@ -177,7 +161,7 @@ namespace ECDatabaseEngine
             }
             else
             { 
-                ECDatabaseConnection.Delete(this);
+                ECDatabaseConnection.Connection.Delete(this);
                 currentRecord = records.IndexOf(this);
                 records.Remove(this);
                 currentRecord = currentRecord % records.Count;            
@@ -187,7 +171,7 @@ namespace ECDatabaseEngine
 
         public void Modify()
         {
-            ECDatabaseConnection.Modify(this);
+            ECDatabaseConnection.Connection.Modify(this);
             records[currentRecord] = this;
         }        
 

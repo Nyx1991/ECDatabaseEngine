@@ -42,9 +42,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Attributes.cs" />
+    <Compile Include="DatabaseImplementations\ECMySQLConnection.cs" />
     <Compile Include="ECDatabaseConnection.cs" />
     <Compile Include="ECTable.cs" />
+    <Compile Include="IECConnection.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
