@@ -20,6 +20,8 @@ namespace ECDatabaseEngine
         bool Exists(ECTable _table);
         List<Dictionary<string, string>> GetData(ECTable _table, Dictionary<string, string> _filter, Dictionary<string, KeyValuePair<string, string>> _ranges);
         void CreateTableIfNotExist(ECTable _table);
+        void AlterTableFields(ECTable _table);      
         string GetConnectionStringExample();
+        string FieldTypeToSqlType(FieldType _ft);
     }
 }

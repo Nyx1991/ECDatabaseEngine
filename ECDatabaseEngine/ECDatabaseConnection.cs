@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ECDatabaseEngine
 {
-    public enum FieldType { VARCHAR, CHAR, INT, BLOB, BOOLEAN, DATETIME, DECIMAL, FLOAT, DOUBLE, DATE };
+    public enum FieldType { VARCHAR, CHAR, INT, BLOB, BOOLEAN, DATETIME, DECIMAL, FLOAT, DOUBLE, DATE, TEXT };
 
     public static class ECDatabaseConnection
     {
@@ -22,6 +22,10 @@ namespace ECDatabaseEngine
             {
                 case "mysql":
                     Connection = new ECMySQLConnection();
+                    break;
+
+                case "sqlite":
+                    Connection = new ECSqLiteConnection();
                     break;
 
                 default:
@@ -41,7 +45,8 @@ namespace ECDatabaseEngine
 
         public static void SynchronizeSchema(ECTable _table)
         {
-            Connection.CreateTableIfNotExist(_table);            
+            Connection.CreateTableIfNotExist(_table);
+            Connection.AlterTableFields(_table);
         }
         
         private static void processConnectionString(string _connStr)

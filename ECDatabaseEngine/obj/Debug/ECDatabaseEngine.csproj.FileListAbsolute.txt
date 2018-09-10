@@ -7,3 +7,15 @@ E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\obj\Debug\ECDatabaseE
 E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\obj\Debug\ECDatabaseEngine.csproj.CopyComplete
 E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\obj\Debug\ECDatabaseEngine.dll
 E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\obj\Debug\ECDatabaseEngine.pdb
+E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\System.Data.SQLite.dll
+E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\obj\Debug\ECDatabaseEngine.LibResource.resources
+E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\obj\Debug\ECDatabaseEngine.csproj.GenerateResource.cache
+E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\System.Data.SQLite.Linq.dll
+E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\ECDatabaseEngine.dll.config
+E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\EntityFramework.dll
+E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\EntityFramework.SqlServer.dll
+E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\System.Data.SQLite.EF6.dll
+E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\EntityFramework.xml
+E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\EntityFramework.SqlServer.xml
+E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\System.Data.SQLite.xml
+E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\System.Data.SQLite.dll.config

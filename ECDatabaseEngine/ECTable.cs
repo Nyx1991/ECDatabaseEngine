@@ -36,7 +36,7 @@ namespace ECDatabaseEngine
 
         public void SynchronizeSchema()
         {
-            ECDatabaseConnection.SynchronizeSchema(this);          
+            ECDatabaseConnection.SynchronizeSchema(this);            
         }
 
         public void Init()
@@ -87,7 +87,7 @@ namespace ECDatabaseEngine
         public void Get(int _recId)
         {            
             filter = new Dictionary<string, string>();
-            filter.Add("RecId", "="+_recId.ToString());
+            filter.Add("RecId", _recId.ToString());
             LoadTableDataFromDictionaryList(ECDatabaseConnection.Connection.GetData(this, filter, 
                                                                                     new Dictionary<string, KeyValuePair<string, string>>()));
         }
@@ -164,8 +164,16 @@ namespace ECDatabaseEngine
                 ECDatabaseConnection.Connection.Delete(this);
                 currentRecord = records.IndexOf(this);
                 records.Remove(this);
-                currentRecord = currentRecord % records.Count;            
-                CopyFrom(records[currentRecord]);
+                if (records.Count == 0)
+                { 
+                    currentRecord = 0;
+                    Init();
+                }
+                else
+                { 
+                    currentRecord = currentRecord % records.Count;            
+                    CopyFrom(records[currentRecord]);
+                }
             }
         }
 
@@ -325,9 +333,8 @@ namespace ECDatabaseEngine
 
         public IEnumerator GetEnumerator()
         {
-            return records.GetEnumerator();
+            return this;
         }
-
 
         override
         public string ToString()

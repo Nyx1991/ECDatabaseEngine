@@ -49,7 +49,11 @@ namespace ECDatabaseEngine
         public void Disconnect()
         {
             if (isConnected && connection != null)
+            {
                 connection.Close();
+                connection = null;
+                isConnected = false;
+            }
         }
 
         public List<Dictionary<string, string>> GetData(ECTable _table, Dictionary<string, string> _filter, Dictionary<string, KeyValuePair<string, string>> _ranges)
@@ -65,7 +69,7 @@ namespace ECDatabaseEngine
                     where += "("+kp.Key + " BETWEEN " + kp.Value.Key + " AND " + kp.Value.Value + ") AND";
 
             foreach (KeyValuePair<string, string> kp in _filter.ToArray())
-                where += kp.Key+" "+kp.Value+" AND";
+                where += kp.Key+"="+kp.Value+" AND";
 
             if (!where.Equals(""))
             {
@@ -210,6 +214,91 @@ namespace ECDatabaseEngine
         public string GetConnectionStringExample()
         {
             return "driver=mysql;server=localhost;database=database;user=Username;pass=Password";
+        }
+
+        public string FieldTypeToSqlType(FieldType _ft)
+        {
+            return _ft.ToString();
+        }
+
+        public void AlterTableFields(ECTable _table)
+        {
+            Type t = _table.GetType();
+            Dictionary<string, string> fieldsToAdd = new Dictionary<string, string>();
+            Dictionary<string, string> fieldsToDelete = new Dictionary<string, string>();
+            Dictionary<string, string> databaseFields = new Dictionary<string, string>();
+
+            GetFieldsToChange(_table, ref fieldsToAdd, ref fieldsToDelete, ref databaseFields);
+
+            //Add Fields
+            foreach (KeyValuePair<string, string> kv in fieldsToAdd)
+            {
+                PropertyInfo p = t.GetProperty(kv.Key);
+                string sql = "ALTER TABLE `" + t.Name + "` ADD `" + kv.Key + "` " + kv.Value;
+
+                if (p.GetCustomAttribute(typeof(PrimaryKeyAttribute)) != null)
+                {
+                    sql += " NOT NULL PRIMARY KEY";
+                }
+                else if (p.GetCustomAttribute(typeof(NotNullAttribute)) != null)
+                    sql += " NOT NULL";
+                else
+                    sql += " NULL";
+
+                if (p.GetCustomAttribute(typeof(AutoIncrementAttribute)) != null)
+                    sql += " AUTOINCREMENT";
+
+                using (MySqlCommand cmd = new MySqlCommand(sql, connection))
+                    cmd.ExecuteNonQuery();
+            }
+
+            //Delete Fields
+            foreach(KeyValuePair<string, string> kv in fieldsToDelete)
+            { 
+                string sql = "ALTER TABLE `" + t.Name + "` DROP COLUMN `" + kv.Key + "`";
+                using (MySqlCommand cmd = new MySqlCommand(sql, connection))
+                    cmd.ExecuteNonQuery();                
+            }
+        }
+
+        internal void GetFieldsToChange(ECTable _table, ref Dictionary<string, string> _fieldsToAdd,
+                                        ref Dictionary<string, string> _fieldsToDelete,
+                                        ref Dictionary<string, string> _databaseFields)
+        {
+            Type t = _table.GetType();
+            Dictionary<string, string> tableProperties = new Dictionary<string, string>();
+
+            foreach (PropertyInfo p in _table.GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute))))
+            {
+                TableFieldAttribute tfa = (TableFieldAttribute)p.GetCustomAttribute(typeof(TableFieldAttribute));
+                if (tfa.type == FieldType.VARCHAR)
+                    tableProperties.Add(p.Name, FieldTypeToSqlType(tfa.type) + "(" + tfa.length.ToString() + ")");
+                else
+                    tableProperties.Add(p.Name, FieldTypeToSqlType(tfa.type));
+            }
+            string sql = "SHOW COLUMNS FROM `" + t.Name + "`;";
+
+            MySqlCommand cmd = new MySqlCommand(sql, connection);
+            MySqlDataReader res = cmd.ExecuteReader();
+
+            while (res.Read())
+            {
+                string type = res["Type"].ToString().ToUpper();
+                if (type.Substring(0, type.IndexOf('(')) != "VARCHAR")
+                    type = type.Substring(0, type.IndexOf('('));
+                _databaseFields.Add(res["Field"].ToString(), type);
+            }
+                
+
+            foreach (KeyValuePair<string, string> kv in tableProperties)
+                if (!_databaseFields.Contains(kv))
+                    _fieldsToAdd.Add(kv.Key, kv.Value);
+
+            foreach (KeyValuePair<string, string> kv in _databaseFields)
+                if (!tableProperties.Contains(kv))
+                    _fieldsToDelete.Add(kv.Key, kv.Value);
+
+            res.Close();
         }
     }
 }

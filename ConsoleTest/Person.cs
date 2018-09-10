@@ -10,11 +10,11 @@ namespace ConsoleTest
     class Person : ECTable
     {
 
-        [TableField(FieldType.VARCHAR,50)]
+        [TableField(FieldType.VARCHAR, 50)]
         public string Firstname { get; set; }
 
         [TableField(FieldType.VARCHAR, 50)]
-        public string Name { get; set; }  
-        
+        public string Name { get; set; }
+
     }
 }

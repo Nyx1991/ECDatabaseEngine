@@ -12,3 +12,13 @@ E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\obj\Debug\ConsoleTest.exe
 E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\obj\Debug\ConsoleTest.pdb
 E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Debug\ConsoleTest.pdb
 E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\obj\Debug\ConsoleTest.csprojResolveAssemblyReference.cache
+E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Debug\System.Data.SQLite.dll
+E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Debug\ECDatabaseEngine.dll.config
+E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Debug\System.Data.SQLite.xml
+E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Debug\System.Data.SQLite.dll.config
+E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Debug\EntityFramework.dll
+E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Debug\EntityFramework.SqlServer.dll
+E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Debug\System.Data.SQLite.EF6.dll
+E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Debug\System.Data.SQLite.Linq.dll
+E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Debug\EntityFramework.xml
+E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Debug\EntityFramework.SqlServer.xml
