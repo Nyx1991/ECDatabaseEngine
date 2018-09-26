@@ -17,7 +17,7 @@ namespace ECDatabaseEngine
 
         public static void CreateConnection(string connectionString)
         {
-            processConnectionString(connectionString);
+            ProcessConnectionString(connectionString);
             switch (parms["driver"])
             {
                 case "mysql":
@@ -49,7 +49,7 @@ namespace ECDatabaseEngine
             Connection.AlterTableFields(_table);
         }
         
-        private static void processConnectionString(string _connStr)
+        private static void ProcessConnectionString(string _connStr)
         {
             parms = new Dictionary<string, string>();
             string[] keyValPairs = _connStr.Split(';');

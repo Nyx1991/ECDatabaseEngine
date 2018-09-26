@@ -6,14 +6,17 @@ using System.Threading.Tasks;
 
 namespace ECDatabaseEngine
 {
+    [AttributeUsage(AttributeTargets.Property)]
     public class PrimaryKeyAttribute : Attribute
     {
     }
 
+    [AttributeUsage(AttributeTargets.Property)]
     public class NotNullAttribute : Attribute
     {
     }
 
+    [AttributeUsage(AttributeTargets.Property)]
     internal class AutoIncrementAttribute : Attribute
     {
     }
@@ -36,13 +39,9 @@ namespace ECDatabaseEngine
         public TableFieldAttribute(FieldType t, int l)
         {
             type = t;
-            length = l;
+            length = l;        
         }
     }
 
-    //[AttributeUsage(AttributeTargets.Field)]
-    //public class TaskParameterAttribute : Attribute
-    //{
 
-    //}
 }

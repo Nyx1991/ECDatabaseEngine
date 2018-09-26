@@ -23,11 +23,7 @@ namespace ConsoleTest
 
 
             ECDatabaseConnection.CreateConnection(connectionString);
-            Console.WriteLine(ECDatabaseConnection.IsConnected);
-
-            Person pers = new Person();
-
-            pers.SynchronizeSchema();
+            Console.WriteLine(ECDatabaseConnection.IsConnected);            
 
             Console.ReadKey();
 

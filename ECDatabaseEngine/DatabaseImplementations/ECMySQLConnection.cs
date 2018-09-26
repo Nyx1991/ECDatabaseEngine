@@ -9,6 +9,7 @@ namespace ECDatabaseEngine
     internal class ECMySQLConnection : IECConnection
     {
         MySqlConnection connection = null;
+        MySqlCommand command = null;
 
         public bool IsConnected => isConnected;
         public string CurrentDatabase => currentDatabase;
@@ -58,40 +59,86 @@ namespace ECDatabaseEngine
 
         public List<Dictionary<string, string>> GetData(ECTable _table, Dictionary<string, string> _filter, Dictionary<string, KeyValuePair<string, string>> _ranges)
         {
+            //Type t = _table.GetType();
+            //string where = "";
+            //string sql = "SELECT * FROM `" + t.Name + "` ";
+
+            //foreach (KeyValuePair<string, KeyValuePair<string, string>> kp in _ranges.ToArray())
+            //    if (kp.Value.Value.Equals(""))
+            //        where += kp.Key + "='" + kp.Value.Key + "' AND";
+            //    else
+            //        where += "("+kp.Key + " BETWEEN " + kp.Value.Key + " AND " + kp.Value.Value + ") AND";
+
+            //foreach (KeyValuePair<string, string> kp in _filter.ToArray())
+            //    where += kp.Key+"="+kp.Value+" AND";
+
+            //if (!where.Equals(""))
+            //{
+            //    sql += "WHERE " + where.Substring(0, where.Length - 4) + ";";
+            //}
+
+            command = new MySqlCommand();
+            command.Connection = connection;
+
             Type t = _table.GetType();
-            string where = "";
+            List<string> where = new List<string>();
+            Dictionary<string, string> parms = new Dictionary<string, string>();
             string sql = "SELECT * FROM `" + t.Name + "` ";
 
-            foreach (KeyValuePair<string, KeyValuePair<string, string>> kp in _ranges.ToArray())
-                if (kp.Value.Value.Equals(""))
-                    where += kp.Key + "='" + kp.Value.Key + "' AND";
-                else
-                    where += "("+kp.Key + " BETWEEN " + kp.Value.Key + " AND " + kp.Value.Value + ") AND";
+            command.Parameters.Clear();
 
-            foreach (KeyValuePair<string, string> kp in _filter.ToArray())
-                where += kp.Key+"="+kp.Value+" AND";
-
-            if (!where.Equals(""))
+            _table.GetParameterizedWherClause(ref where, ref parms);
+            foreach (KeyValuePair<string, string> kv in parms)
+                command.Parameters.AddWithValue(kv.Key, kv.Value);
+            if (where.Count != 0)
             {
-                sql += "WHERE " + where.Substring(0, where.Length - 4) + ";";
+                sql += " WHERE ";
+                foreach (string s in where)
+                    sql += "(" + s + ") AND";
+                sql = sql.Substring(0, sql.Length - 4);
             }
+            sql += ";";
 
-            return (ExecuteSql(sql));
+            command.CommandText = sql;
+            command.Prepare();
+
+            return (ExecuteSql());
         }
 
-        protected List<Dictionary<string, string>> ExecuteSql(string sql)
+        protected List<Dictionary<string, string>> ExecuteSql()
         {
+            //List<Dictionary<string, string>> ret = new List<Dictionary<string, string>>();
+            //Dictionary<string, string> currentRecord = new Dictionary<string, string>();
+
+            //MySqlCommand cmd = new MySqlCommand(sql, connection);
+            //MySqlDataReader res = cmd.ExecuteReader();
+
+            //while (res.Read())
+            //{
+            //    currentRecord = new Dictionary<string, string>();
+            //    for (int i = 0; i < res.FieldCount; i++)
+            //        currentRecord.Add(res.GetName(i), res.GetString(i));
+            //    ret.Add(currentRecord);
+            //}
+
+            //res.Close();
+            //return ret;
+
             List<Dictionary<string, string>> ret = new List<Dictionary<string, string>>();
             Dictionary<string, string> currentRecord = new Dictionary<string, string>();
-
-            MySqlCommand cmd = new MySqlCommand(sql, connection);
-            MySqlDataReader res = cmd.ExecuteReader();
+            
+            MySqlDataReader res = command.ExecuteReader();
 
             while (res.Read())
             {
                 currentRecord = new Dictionary<string, string>();
                 for (int i = 0; i < res.FieldCount; i++)
-                    currentRecord.Add(res.GetName(i), res.GetString(i));
+                { 
+                    if(!res.IsDBNull(i))
+                        currentRecord.Add(res.GetName(i), res.GetString(i));
+                    else
+                        currentRecord.Add(res.GetName(i), "");
+                }
                 ret.Add(currentRecord);
             }
 

@@ -60,6 +60,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Address.cs" />
     <Compile Include="AppRessource.Designer.cs">
       <DependentUpon>AppRessource.resx</DependentUpon>
       <DesignTime>True</DesignTime>

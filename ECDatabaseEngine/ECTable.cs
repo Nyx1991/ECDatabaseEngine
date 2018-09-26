@@ -13,8 +13,8 @@ namespace ECDatabaseEngine
     {
         protected List<ECTable> records;
         private Dictionary<string, string> filter;
-        private Dictionary<string, KeyValuePair<string, string>> ranges;
-
+        private Dictionary<string, KeyValuePair<string, string>> ranges;        
+        
         int currentRecord;
 
         [TableField(FieldType.INT)]
@@ -27,34 +27,27 @@ namespace ECDatabaseEngine
 
         public int Count => records.Count;
 
-
+        public String TableName { get { return this.GetType().Name; } }
 
         public ECTable()
         {
             Init();
-        }       
+        }                       
+        
 
-        public void SynchronizeSchema()
-        {
-            ECDatabaseConnection.SynchronizeSchema(this);            
-        }
-
+        #region Init/Reset/Clear
+        /// <summary>
+        /// Removes all filters and ranges and unloads all loaded Records. Initializes all Fields.
+        /// </summary>
         public void Init()
         {
             if (records != null)
                 records.Clear();
             else
                 records = new List<ECTable>();
-            currentRecord = 0;            
+            currentRecord = 0;
             filter = new Dictionary<string, string>();
-            ranges = new Dictionary<string, KeyValuePair<string, string>>();
-            Clear();
-        }
-
-        public void Clear()
-        {
-            filter.Clear();
-            ranges.Clear();
+            ranges = new Dictionary<string, KeyValuePair<string, string>>();            
             foreach (PropertyInfo p in this.GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute))))
             {
                 Type type = p.PropertyType;
@@ -64,6 +57,26 @@ namespace ECDatabaseEngine
                     p.SetValue(this, "");
             }
         }
+
+        /// <summary>
+        /// Removes all filters and ranges
+        /// </summary>
+        public void Clear()
+        {
+            filter.Clear();
+            ranges.Clear();
+        }
+
+        /// <summary>
+        /// IEnumerator implementation: Set current Position before first item
+        /// </summary>
+        public void Reset()
+        {
+            currentRecord = -1;            
+        }
+        #endregion
+
+        #region GetData
 
         public bool Next()
         {
@@ -84,38 +97,25 @@ namespace ECDatabaseEngine
             return ret;
         }
 
-        public void Get(int _recId)
-        {            
-            filter = new Dictionary<string, string>();
-            filter.Add("RecId", _recId.ToString());
-            LoadTableDataFromDictionaryList(ECDatabaseConnection.Connection.GetData(this, filter, 
-                                                                                    new Dictionary<string, KeyValuePair<string, string>>()));
-        }
+        public bool MoveNext()
+        {
+            return Next();
+        }        
 
         public void FindSet()
         {            
-            LoadTableDataFromDictionaryList(ECDatabaseConnection.Connection.GetData(this, filter, ranges));
+            InitTableDataFromDictionaryList(ECDatabaseConnection.Connection.GetData(this, filter, ranges));
         }     
+        
+        #endregion
 
-        internal void LoadTableDataFromDictionaryList(List<Dictionary<string,string>> _dataDict)
+        #region Filter Data
+        public void Get(int _recId)
         {
-            Init();            
-            ECTable table;
-            foreach (Dictionary<string, string> d in _dataDict)
-            {
-                table = (ECTable)Activator.CreateInstance(this.GetType());
-                table.InitFromDictionary(d);
-                records.Add(table);
-            }
-            if (records.Count == 0)
-            {
-                Clear();
-            }
-            else
-            {
-                currentRecord = 0;
-                CopyFrom(records.First());
-            }
+            filter = new Dictionary<string, string>();
+            filter.Add("RecId", _recId.ToString());
+            InitTableDataFromDictionaryList(ECDatabaseConnection.Connection.GetData(this, filter,
+                                                                                    new Dictionary<string, KeyValuePair<string, string>>()));
         }
 
         public void SetFilter(string _fieldName, string _filterString="")
@@ -145,11 +145,13 @@ namespace ECDatabaseEngine
             else
                 ranges.Add(_fieldName, new KeyValuePair<string, string>(_from, _to));
         }
+        #endregion
 
+        #region Database operations
         public void Insert()
         { 
             RecId = ECDatabaseConnection.Connection.Insert(this);
-            FindSet();
+            Get(RecId);
         }
 
         public void Delete()
@@ -181,8 +183,15 @@ namespace ECDatabaseEngine
         {
             ECDatabaseConnection.Connection.Modify(this);
             records[currentRecord] = this;
-        }        
+        }
 
+        public void SynchronizeSchema()
+        {
+            ECDatabaseConnection.SynchronizeSchema(this);
+        }
+        #endregion
+
+        #region Data manipulation: Copy and convert
         public void CopyFrom(ECTable _table)
         {
             PropertyInfo targetPi;
@@ -200,8 +209,13 @@ namespace ECDatabaseEngine
         {
             return String.Format("{0}-{1}-{2} {3}:{4}:{5}.{6}", _dt.Year, _dt.Month, _dt.Day, _dt.Hour, _dt.Minute, _dt.Second, _dt.Millisecond);
         }
+        #endregion
 
-
+        #region Database helper functions
+        internal ECTable(Dictionary<string, string> _values) : this()
+        {
+            InitRecordFromDictionary(_values);
+        }
 
         internal string GetValueInSqlFormat(PropertyInfo _p)
         {
@@ -235,44 +249,72 @@ namespace ECDatabaseEngine
         {
             TableFieldAttribute tfa = _p.GetCustomAttribute<TableFieldAttribute>();
             string[] date, time;
-
+                        
             switch (tfa.type)
             {
                 case FieldType.BOOLEAN:
-                    _p.SetValue(this, Convert.ToBoolean(value));
+                    if(value == "")
+                        _p.SetValue(this, false);
+                    else
+                        _p.SetValue(this, Convert.ToBoolean(value));
                     break;
 
                 case FieldType.CHAR:
-                    _p.SetValue(this, Convert.ToChar(value));
+                    if (value == "")
+                        _p.SetValue(this, ' ');
+                    else
+                        _p.SetValue(this, Convert.ToChar(value));
                     break;
 
                 case FieldType.DATE:
-                    date = value.Split('-');
-                    _p.SetValue(this, new DateTime(Convert.ToInt32(date[0]), Convert.ToInt32(date[1]), Convert.ToInt32(date[2])));
+                    if (value == "")
+                        _p.SetValue(this, new DateTime());
+                    else
+                    { 
+                        date = value.Split('-');
+                        _p.SetValue(this, new DateTime(Convert.ToInt32(date[0]), Convert.ToInt32(date[1]), Convert.ToInt32(date[2])));
+                    }
                     break;
 
                 case FieldType.DATETIME:
-                    date = value.Split(' ')[0].Split('-');
-                    time = value.Split(' ')[1].Split(':');
-                    _p.SetValue(this, new DateTime(Convert.ToInt32(date[0]), Convert.ToInt32(date[1]), Convert.ToInt32(date[2]),
-                                                   Convert.ToInt32(time[0]), Convert.ToInt32(time[1]), Convert.ToInt32(time[2].Split('.')[0]),
-                                                   Convert.ToInt32(time[2].Split('.')[1])));
+                    if (value == "")
+                        _p.SetValue(this, new DateTime());
+                    else
+                    {
+                        date = value.Split(' ')[0].Split('-');
+                        time = value.Split(' ')[1].Split(':');
+                        _p.SetValue(this, new DateTime(Convert.ToInt32(date[0]), Convert.ToInt32(date[1]), Convert.ToInt32(date[2]),
+                                                       Convert.ToInt32(time[0]), Convert.ToInt32(time[1]), Convert.ToInt32(time[2].Split('.')[0]),
+                                                       Convert.ToInt32(time[2].Split('.')[1])));
+                    }
                     break;
 
                 case FieldType.DECIMAL:
-                    _p.SetValue(this, Convert.ToDecimal(value));
+                    if (value == "")
+                        _p.SetValue(this, 0.0);
+                    else
+                        _p.SetValue(this, Convert.ToDecimal(value));
                     break;
 
                 case FieldType.DOUBLE:
-                    _p.SetValue(this, Convert.ToDouble(value));
+                    if (value == "")
+                        _p.SetValue(this, 0);
+                    else
+                        _p.SetValue(this, Convert.ToDouble(value));
                     break;
 
                 case FieldType.FLOAT:
-                    _p.SetValue(this, (float)Convert.ToDouble(value));
+                    if (value == "")
+                        _p.SetValue(this, 0);
+                    else
+                        _p.SetValue(this, (float)Convert.ToDouble(value));
                     break;
 
                 case FieldType.INT:
-                    _p.SetValue(this, Convert.ToInt32(value));
+                    if (value == "")
+                        _p.SetValue(this, 0);
+                    else
+                        _p.SetValue(this, Convert.ToInt32(value));
                     break;
 
                 case FieldType.VARCHAR:
@@ -281,41 +323,203 @@ namespace ECDatabaseEngine
 
                 default:
                     throw new NotImplementedException();
-            }
-        }
+            }                        
+        }                
 
-        internal ECTable(Dictionary<string, string> _values) : this()
-        {
-            InitFromDictionary(_values);
-        }
-
-        internal void InitFromDictionary(Dictionary<string, string> _values)
+        internal void InitRecordFromDictionary(Dictionary<string, string> _values)
         {
             Type t = this.GetType();
             foreach (KeyValuePair<string, string> kv in _values)
                 ConvertAndStore(t.GetProperty(kv.Key), kv.Value);
         }
 
-
-
-        public bool MoveNext()
+        internal void InitTableDataFromDictionaryList(List<Dictionary<string, string>> _dataDict)
         {
-            return Next();
-        }
-
-        public void Reset()
-        {
-            currentRecord = 0;
+            Init();
+            ECTable table;
+            foreach (Dictionary<string, string> d in _dataDict)
+            {
+                table = (ECTable)Activator.CreateInstance(this.GetType());
+                table.InitRecordFromDictionary(d);
+                records.Add(table);
+            }
             if (records.Count == 0)
             {
-                Init();
+                Clear();
             }
             else
             {
-                CopyFrom(records[currentRecord]);
+                currentRecord = 0;
+                CopyFrom(records.First());
             }
         }
+        
+        internal void GetParameterizedWherClause(ref List<string> _where, ref Dictionary<string, string> _parameters)
+        {
+            _where.Clear();
+            _parameters.Clear();
+            
+            foreach (KeyValuePair<string, KeyValuePair<string, string>> kp in ranges)
+                if (kp.Value.Value.Equals(""))
+                {                    
+                    _parameters.Add(kp.Key, kp.Value.Key);
+                    _where.Add(kp.Key + "= @" + kp.Key);                    
+                }
+                else
+                {
+                    _parameters.Add("K" + kp.Key, kp.Value.Key);
+                    _parameters.Add("V" + kp.Key, kp.Value.Value);
+                    _where.Add("(" + kp.Key + " BETWEEN @K" + kp.Key + " AND @V" + kp.Key + ")");
+                }
 
+            foreach (KeyValuePair<string, string> kp in filter)
+            {
+                _where.Add(ParseFilterString(kp.Key, kp.Value, ref _parameters));
+            }
+        }
+        
+        internal string ParseFilterString(string _fieldName, string _filter, ref Dictionary<string, string> _parameter)
+        {
+            string fieldName = "`" + _fieldName + "`";
+            string[] val = { "", "" };
+            int valId = 0;
+            bool foundPoint = false;
+            string clause = "("+fieldName;
+            string operators = "<>=";
+            for(int i=0; i<_filter.Length; i++)
+            {
+                switch (_filter[i])
+                {
+                    case '<':
+                        if (!foundPoint)
+                            clause += '<';
+                        else
+                        {
+                            clause += ProcessFromToOperator(i, val[valId % 2], val[valId + 1 % 2],
+                                                _filter[i - 1], ref _parameter);
+                            foundPoint = false;
+                            val[valId + 1 % 2] = "";
+                        }
+                        break;
+                    case '>':
+                        if (!foundPoint)
+                            clause += '<';
+                        else
+                        {
+                            clause += ProcessFromToOperator(i, val[valId % 2], val[valId + 1 % 2],
+                                                _filter[i - 1], ref _parameter);
+                            foundPoint = false;
+                            val[valId + 1 % 2] = "";
+                        }
+                        break;
+                    case '=':
+                        if (!foundPoint)
+                            clause += '=';
+                        else
+                        {
+                            clause += ProcessFromToOperator(i, val[valId % 2], val[valId + 1 % 2],
+                                                _filter[i - 1], ref _parameter);
+                            foundPoint = false;
+                            val[valId + 1 % 2] = "";
+                        }
+                        break;
+                    case '|':
+                        if (!foundPoint)
+                        {
+                            if (!operators.Contains(clause.Last()))
+                                clause += "=";
+                            clause += "@F" + i + " OR " + fieldName;
+                            _parameter.Add("F" + i, val[valId % 2]);                            
+                        }
+                        else
+                        {
+                            clause += ProcessFromToOperator(i, val[valId % 2], val[valId + 1 % 2],
+                                                _filter[i - 1], ref _parameter);
+                            foundPoint = false;
+                            val[valId + 1 % 2] = "";
+                        }
+                        val[valId % 2] = "";
+                        break;
+                    case '&':
+                        if (!foundPoint)
+                        {
+                            if (!operators.Contains(clause.Last()))
+                                clause += "=";
+                            clause += "@F" + i + " AND " + fieldName;
+                            _parameter.Add("F" + i, val[valId % 2]);
+                        }
+                        else
+                        {
+                            clause += ProcessFromToOperator(i, val[valId % 2], val[valId + 1 % 2],
+                                                _filter[i - 1], ref _parameter);
+                            foundPoint = false;
+                            val[valId+1 % 2] = "";
+                        }
+                        val[valId % 2] = "";
+                        break;
+                    case '.':
+                        if (foundPoint) //found second . => switch to second value storage
+                            valId++;
+                        else //found first . => remember for next loop (we're now in another State)
+                            foundPoint = true;
+                        break;
+                    default:
+                        val[valId % 2] += _filter[i];                        
+                        break;
+                }
+            }
+
+            if (foundPoint) // we're at the end of the line and still havent processed the .'s. That Means we have sth. like "1..5" or "1.." or "..5"
+            {
+                clause += ProcessFromToOperator(_filter.Length, val[valId % 2], val[(valId+1) % 2], 
+                                                _filter[_filter.Length-1], ref _parameter);
+            }
+            else
+            {
+                if (!operators.Contains(clause.Last()))
+                    clause += "=";
+                clause += "@F" + _filter.Length;
+                _parameter.Add("F" + _filter.Length, val[valId % 2]);
+            }
+
+            return clause+")";
+        }
+
+        private string ProcessFromToOperator(int id, string currVal, string lastVal, char lastChar, ref Dictionary<string, string> _parameter)
+        {
+            string clause="";
+
+            if (lastVal == "" || currVal == "")
+            {
+                if (lastChar == '.') //case: "1.."
+                { 
+                    clause += ">=";
+                    _parameter.Add("F" + id, lastVal);
+                }
+                else //case: "..5"
+                { 
+                    clause += "<=";
+                    _parameter.Add("F" + id, currVal);
+                }
+                clause += "@F" + id;                
+            }
+            else //case: "1..5"
+            {
+                clause += " BETWEEN ";
+                clause += "@F" + (id - 1);
+                clause += " AND ";
+                clause += "@F" + id;
+
+                _parameter.Add("F" + (id - 1), lastVal);
+                _parameter.Add("F" + id, currVal);
+            }
+
+            return clause;
+        }
+      
+        #endregion
+
+        #region Interface
         public bool Equals(ECTable other)
         {
             PropertyInfo targetPi;
@@ -346,7 +550,6 @@ namespace ECDatabaseEngine
 
             return ret.Substring(0, ret.Length - 2);
         }
-
-        
+        #endregion
     }
 }

@@ -12,9 +12,9 @@ namespace ConsoleTest
 
         [TableField(FieldType.VARCHAR, 50)]
         public string Firstname { get; set; }
-
         [TableField(FieldType.VARCHAR, 50)]
         public string Name { get; set; }
-
+        [TableField(FieldType.INT)]
+        public int RefAddress { get; set; }
     }
 }

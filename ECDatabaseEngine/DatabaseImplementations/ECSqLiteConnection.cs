@@ -136,32 +136,24 @@ namespace ECDatabaseEngine
         public List<Dictionary<string, string>> GetData(ECTable _table, Dictionary<string, string> _filter, Dictionary<string, KeyValuePair<string, string>> _ranges)
         {
             Type t = _table.GetType();
-            string where = "";
+            List<string> where = new List<string>();
+            Dictionary<string,string> parms = new Dictionary<string, string>();
             string sql = "SELECT * FROM `" + t.Name + "` ";
 
             command.Parameters.Clear();
-            foreach (KeyValuePair<string, KeyValuePair<string, string>> kp in _ranges.ToArray())
-                if (kp.Value.Value.Equals(""))
-                {
-                    command.Parameters.AddWithValue(kp.Key, kp.Value.Key);
-                    where += kp.Key + "= @" + kp.Key + " AND";
-                }
-                else
-                {
-                    command.Parameters.AddWithValue("K" + kp.Key, kp.Value.Key);
-                    command.Parameters.AddWithValue("V" + kp.Key, kp.Value.Value);
-                    where += "(" + kp.Key + " BETWEEN @K" + kp.Key + " AND @V" + kp.Key + ") AND";
-                }
 
-            foreach (KeyValuePair<string, string> kp in _filter.ToArray())
+            _table.GetParameterizedWherClause(ref where, ref parms);
+            foreach (KeyValuePair<string, string> kv in parms)
+                command.Parameters.AddWithValue(kv.Key, kv.Value);
+            if (where.Count != 0)
             {
-                command.Parameters.AddWithValue("W" + kp.Key, kp.Value);
-                where += kp.Key + "=@W" + kp.Key + " AND";
+                sql += " WHERE ";
+                foreach (string s in where)
+                    sql += "(" + s + ") AND";
+                sql = sql.Substring(0, sql.Length - 4);
             }
-            if (!where.Equals(""))
-            {
-                sql += "WHERE " + where.Substring(0, where.Length - 4) + ";";
-            }
+            sql += ";";
+
             command.CommandText = sql;
             command.Prepare();
             return (ExecuteSql());
