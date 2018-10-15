@@ -137,12 +137,17 @@ namespace ECDatabaseEngine
         {
             Type t = _table.GetType();
             List<string> where = new List<string>();
-            Dictionary<string,string> parms = new Dictionary<string, string>();
-            string sql = "SELECT * FROM `" + t.Name + "` ";
+            Dictionary<string, string> parms = new Dictionary<string, string>();
+            //Select From
+            string sql = _table.MakeSelectFrom(true);
 
+            //Joins
+            sql += _table.MakeJoins();
+
+            //Where
             command.Parameters.Clear();
-
             _table.GetParameterizedWherClause(ref where, ref parms);
+
             foreach (KeyValuePair<string, string> kv in parms)
                 command.Parameters.AddWithValue(kv.Key, kv.Value);
             if (where.Count != 0)

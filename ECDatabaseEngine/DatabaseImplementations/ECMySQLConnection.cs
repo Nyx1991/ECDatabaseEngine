@@ -59,35 +59,22 @@ namespace ECDatabaseEngine
 
         public List<Dictionary<string, string>> GetData(ECTable _table, Dictionary<string, string> _filter, Dictionary<string, KeyValuePair<string, string>> _ranges)
         {
-            //Type t = _table.GetType();
-            //string where = "";
-            //string sql = "SELECT * FROM `" + t.Name + "` ";
-
-            //foreach (KeyValuePair<string, KeyValuePair<string, string>> kp in _ranges.ToArray())
-            //    if (kp.Value.Value.Equals(""))
-            //        where += kp.Key + "='" + kp.Value.Key + "' AND";
-            //    else
-            //        where += "("+kp.Key + " BETWEEN " + kp.Value.Key + " AND " + kp.Value.Value + ") AND";
-
-            //foreach (KeyValuePair<string, string> kp in _filter.ToArray())
-            //    where += kp.Key+"="+kp.Value+" AND";
-
-            //if (!where.Equals(""))
-            //{
-            //    sql += "WHERE " + where.Substring(0, where.Length - 4) + ";";
-            //}
-
             command = new MySqlCommand();
             command.Connection = connection;
 
             Type t = _table.GetType();
             List<string> where = new List<string>();
             Dictionary<string, string> parms = new Dictionary<string, string>();
-            string sql = "SELECT * FROM `" + t.Name + "` ";
+            //Select From
+            string sql = _table.MakeSelectFrom(true);
 
+            //Joins
+            sql += _table.MakeJoins();
+
+            //Where
             command.Parameters.Clear();
-
             _table.GetParameterizedWherClause(ref where, ref parms);
+
             foreach (KeyValuePair<string, string> kv in parms)
                 command.Parameters.AddWithValue(kv.Key, kv.Value);
             if (where.Count != 0)
@@ -107,23 +94,6 @@ namespace ECDatabaseEngine
 
         protected List<Dictionary<string, string>> ExecuteSql()
         {
-            //List<Dictionary<string, string>> ret = new List<Dictionary<string, string>>();
-            //Dictionary<string, string> currentRecord = new Dictionary<string, string>();
-
-            //MySqlCommand cmd = new MySqlCommand(sql, connection);
-            //MySqlDataReader res = cmd.ExecuteReader();
-
-            //while (res.Read())
-            //{
-            //    currentRecord = new Dictionary<string, string>();
-            //    for (int i = 0; i < res.FieldCount; i++)
-            //        currentRecord.Add(res.GetName(i), res.GetString(i));
-            //    ret.Add(currentRecord);
-            //}
-
-            //res.Close();
-            //return ret;
-
             List<Dictionary<string, string>> ret = new List<Dictionary<string, string>>();
             Dictionary<string, string> currentRecord = new Dictionary<string, string>();
             
@@ -133,8 +103,8 @@ namespace ECDatabaseEngine
             {
                 currentRecord = new Dictionary<string, string>();
                 for (int i = 0; i < res.FieldCount; i++)
-                { 
-                    if(!res.IsDBNull(i))
+                {
+                    if (!res.IsDBNull(i))
                         currentRecord.Add(res.GetName(i), res.GetString(i));
                     else
                         currentRecord.Add(res.GetName(i), "");
@@ -306,7 +276,7 @@ namespace ECDatabaseEngine
                 using (MySqlCommand cmd = new MySqlCommand(sql, connection))
                     cmd.ExecuteNonQuery();                
             }
-        }
+        }        
 
         internal void GetFieldsToChange(ECTable _table, ref Dictionary<string, string> _fieldsToAdd,
                                         ref Dictionary<string, string> _fieldsToDelete,

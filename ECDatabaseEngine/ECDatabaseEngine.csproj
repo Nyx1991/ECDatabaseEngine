@@ -65,6 +65,7 @@
     <Compile Include="ECDatabaseConnection.cs" />
     <Compile Include="ECTable.cs" />
     <Compile Include="IECConnection.cs" />
+    <Compile Include="ECJoin.cs" />
     <Compile Include="LibResource.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

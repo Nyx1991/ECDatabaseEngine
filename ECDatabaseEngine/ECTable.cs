@@ -13,8 +13,10 @@ namespace ECDatabaseEngine
     {
         protected List<ECTable> records;
         private Dictionary<string, string> filter;
-        private Dictionary<string, KeyValuePair<string, string>> ranges;        
-        
+        private Dictionary<string, KeyValuePair<string, string>> ranges;
+
+        private List<ECJoin> joins;
+
         int currentRecord;
 
         [TableField(FieldType.INT)]
@@ -32,8 +34,7 @@ namespace ECDatabaseEngine
         public ECTable()
         {
             Init();
-        }                       
-        
+        }
 
         #region Init/Reset/Clear
         /// <summary>
@@ -45,9 +46,11 @@ namespace ECDatabaseEngine
                 records.Clear();
             else
                 records = new List<ECTable>();
+
             currentRecord = 0;
             filter = new Dictionary<string, string>();
-            ranges = new Dictionary<string, KeyValuePair<string, string>>();            
+            ranges = new Dictionary<string, KeyValuePair<string, string>>();
+            joins = new List<ECJoin>();
             foreach (PropertyInfo p in this.GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute))))
             {
                 Type type = p.PropertyType;
@@ -59,12 +62,13 @@ namespace ECDatabaseEngine
         }
 
         /// <summary>
-        /// Removes all filters and ranges
+        /// Removes all filters, ranges and joins
         /// </summary>
         public void Clear()
         {
             filter.Clear();
             ranges.Clear();
+            joins.Clear();
         }
 
         /// <summary>
@@ -72,8 +76,35 @@ namespace ECDatabaseEngine
         /// </summary>
         public void Reset()
         {
-            currentRecord = -1;            
+            InvokeMethodeOnJoinedTables("Reset");
+            currentRecord = 0;            
         }
+
+        protected void DeleteRecords()
+        {
+            if(records != null)
+            { 
+                records.Clear();
+            }
+        }
+        #endregion
+
+        #region Joins
+
+        public T JoinedTable<T>()
+        {
+            return (T)joins.First(x => x.TableType == typeof(T)).Table;
+        }
+
+        public void AddJoin(ECTable _table, string _onField ,ECJoinType _joinType)
+        {
+            ECJoin join = new ECJoin();
+            join.JoinType = _joinType;
+            join.OnField = _onField;
+            join.Table = _table;
+            joins.Add(join);
+        }
+        
         #endregion
 
         #region GetData
@@ -94,6 +125,7 @@ namespace ECDatabaseEngine
                 ret = true;
             }            
             CopyFrom(records[currentRecord]);
+            InvokeMethodeOnJoinedTables("Next");
             return ret;
         }
 
@@ -103,7 +135,7 @@ namespace ECDatabaseEngine
         }        
 
         public void FindSet()
-        {            
+        {                  
             InitTableDataFromDictionaryList(ECDatabaseConnection.Connection.GetData(this, filter, ranges));
         }     
         
@@ -330,18 +362,36 @@ namespace ECDatabaseEngine
         {
             Type t = this.GetType();
             foreach (KeyValuePair<string, string> kv in _values)
-                ConvertAndStore(t.GetProperty(kv.Key), kv.Value);
+            {
+                if (kv.Key.Split('.').Count() == 2)
+                {
+                    string[] splittedFieldName = kv.Key.Split('.');
+                    if (splittedFieldName[0].ToLower() == TableName.ToLower())
+                    {
+                        ConvertAndStore(t.GetProperty(splittedFieldName[1]), kv.Value);
+                    }
+                }
+                else
+                {
+                    ConvertAndStore(t.GetProperty(kv.Key), kv.Value);
+                }
+            }
         }
 
         internal void InitTableDataFromDictionaryList(List<Dictionary<string, string>> _dataDict)
         {
-            Init();
+            DeleteRecords();
             ECTable table;
             foreach (Dictionary<string, string> d in _dataDict)
             {
                 table = (ECTable)Activator.CreateInstance(this.GetType());
                 table.InitRecordFromDictionary(d);
                 records.Add(table);
+            }
+            foreach(ECJoin j in joins)
+            {
+                ECTable joinedTable = (ECTable)j.Table;
+                joinedTable.InitTableDataFromDictionaryList(_dataDict);
             }
             if (records.Count == 0)
             {
@@ -356,25 +406,34 @@ namespace ECDatabaseEngine
         
         internal void GetParameterizedWherClause(ref List<string> _where, ref Dictionary<string, string> _parameters)
         {
+            string sqlTableName = "`"+TableName+ "`.";
             _where.Clear();
             _parameters.Clear();
             
             foreach (KeyValuePair<string, KeyValuePair<string, string>> kp in ranges)
                 if (kp.Value.Value.Equals(""))
-                {                    
-                    _parameters.Add(kp.Key, kp.Value.Key);
-                    _where.Add(kp.Key + "= @" + kp.Key);                    
+                {
+                    string keyParm = TableName + kp.Key;
+                    _parameters.Add(keyParm, kp.Value.Key);
+                    _where.Add(sqlTableName+kp.Key + "= @" + keyParm);                    
                 }
                 else
                 {
-                    _parameters.Add("K" + kp.Key, kp.Value.Key);
-                    _parameters.Add("V" + kp.Key, kp.Value.Value);
-                    _where.Add("(" + kp.Key + " BETWEEN @K" + kp.Key + " AND @V" + kp.Key + ")");
+                    string keyParm = TableName + kp.Key;
+                    _parameters.Add("K" + keyParm, kp.Value.Key);
+                    _parameters.Add("V" + keyParm, kp.Value.Value);
+                    _where.Add("(" + sqlTableName+kp.Key + " BETWEEN @K" + keyParm + " AND @V" + keyParm + ")");
                 }
 
             foreach (KeyValuePair<string, string> kp in filter)
             {
                 _where.Add(ParseFilterString(kp.Key, kp.Value, ref _parameters));
+            }
+
+            foreach(ECJoin j in joins)
+            {
+                ECTable joinTable = (ECTable)j.Table;
+                joinTable.GetParameterizedWherClause(ref _where, ref _parameters);
             }
         }
         
@@ -428,8 +487,8 @@ namespace ECDatabaseEngine
                         {
                             if (!operators.Contains(clause.Last()))
                                 clause += "=";
-                            clause += "@F" + i + " OR " + fieldName;
-                            _parameter.Add("F" + i, val[valId % 2]);                            
+                            clause += "@F" + TableName + i + " OR " + fieldName;
+                            _parameter.Add("F" + TableName + i, val[valId % 2]);                            
                         }
                         else
                         {
@@ -445,7 +504,7 @@ namespace ECDatabaseEngine
                         {
                             if (!operators.Contains(clause.Last()))
                                 clause += "=";
-                            clause += "@F" + i + " AND " + fieldName;
+                            clause += "@F" + TableName + i + " AND " + fieldName;
                             _parameter.Add("F" + i, val[valId % 2]);
                         }
                         else
@@ -478,8 +537,8 @@ namespace ECDatabaseEngine
             {
                 if (!operators.Contains(clause.Last()))
                     clause += "=";
-                clause += "@F" + _filter.Length;
-                _parameter.Add("F" + _filter.Length, val[valId % 2]);
+                clause += "@F"+ TableName + _filter.Length;
+                _parameter.Add("F"+ TableName + _filter.Length, val[valId % 2]);
             }
 
             return clause+")";
@@ -494,29 +553,80 @@ namespace ECDatabaseEngine
                 if (lastChar == '.') //case: "1.."
                 { 
                     clause += ">=";
-                    _parameter.Add("F" + id, lastVal);
+                    _parameter.Add("F"+ TableName + id, lastVal);
                 }
                 else //case: "..5"
                 { 
                     clause += "<=";
-                    _parameter.Add("F" + id, currVal);
+                    _parameter.Add("F" + TableName + id, currVal);
                 }
                 clause += "@F" + id;                
             }
             else //case: "1..5"
             {
                 clause += " BETWEEN ";
-                clause += "@F" + (id - 1);
+                clause += "@F" + TableName + (id - 1);
                 clause += " AND ";
-                clause += "@F" + id;
+                clause += "@F" + TableName + id;
 
-                _parameter.Add("F" + (id - 1), lastVal);
-                _parameter.Add("F" + id, currVal);
+                _parameter.Add("F" + TableName + (id - 1), lastVal);
+                _parameter.Add("F" + TableName + id, currVal);
             }
 
             return clause;
         }
-      
+
+        internal string MakeSelectFrom(bool _isRootTable=false)
+        {
+            string sqlTableName = "`" + TableName + "`.";
+            string ret;
+            if (_isRootTable)
+                ret = "SELECT ";
+            else
+                ret = "";
+
+            foreach (PropertyInfo p in GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute))))
+            {
+                ret += sqlTableName + p.Name + " AS '" + TableName + "." + p.Name + "',";
+            }            
+            foreach(ECJoin j in joins)
+            {
+                ret += ((ECTable)j.Table).MakeSelectFrom()+",";
+            }
+            ret = ret.Substring(0, ret.Length - 1);
+
+            if(_isRootTable)
+                ret += " FROM "+ "`" + TableName + "`";
+
+            return ret;
+        }
+
+        internal string MakeJoins()
+        {
+            string ret = "";
+
+            foreach(ECJoin j in joins)
+            {
+                ECTable joinTable = ((ECTable)j.Table);
+                switch (j.JoinType)
+                {
+                    case ECJoinType.Inner:
+                        ret += " INNER JOIN ";
+                        break;
+                    case ECJoinType.LeftOuter:
+                        ret += " LEFT OUTER JOIN ";
+                        break;
+                    case ECJoinType.RightOuter:
+                        ret += " RIGHT OUTER JOIN ";
+                        break;
+                }
+                ret += "`"+joinTable.TableName+"` ON "+"`"+joinTable.TableName+"`.RecId=`"+TableName+"`."+j.OnField;
+                ret += joinTable.MakeJoins();
+            }
+
+            return ret;
+        }
+
         #endregion
 
         #region Interface
@@ -551,5 +661,15 @@ namespace ECDatabaseEngine
             return ret.Substring(0, ret.Length - 2);
         }
         #endregion
+
+        private void InvokeMethodeOnJoinedTables(string _method, object[] _params = null)
+        {
+            if (_params == null)
+                _params = new object[] { };
+            foreach (ECJoin j in joins)
+            {
+                ((ECTable)j.Table).GetType().GetMethod(_method).Invoke(j.Table, _params);
+            }
+        }
     }
 }
