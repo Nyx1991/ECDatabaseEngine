@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Reflection;
 
 namespace ECDatabaseEngine
 {
@@ -19,7 +20,7 @@ namespace ECDatabaseEngine
     [AttributeUsage(AttributeTargets.Property)]
     internal class AutoIncrementAttribute : Attribute
     {
-    }
+    }    
 
     [AttributeUsage(AttributeTargets.Property)]
     public class TableFieldAttribute : Attribute

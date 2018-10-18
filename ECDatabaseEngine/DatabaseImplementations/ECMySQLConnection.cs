@@ -20,6 +20,7 @@ namespace ECDatabaseEngine
         private string currentDatabase;
         private string currentUser;
 
+
         public bool Connect(Dictionary<string, string> _params)
         {
             MySqlConnectionStringBuilder connBuilder = new MySqlConnectionStringBuilder();

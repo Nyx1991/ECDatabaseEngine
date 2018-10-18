@@ -17,7 +17,14 @@ namespace ECDatabaseEngine
 
         private List<ECJoin> joins;
 
+        static int nextGlobalRecId = 0;
+        int globalRecId = 0;
         int currentRecord;
+
+        /// <summary>
+        /// Markes a record
+        /// </summary>
+        public bool Marked { get; set; }
 
         [TableField(FieldType.INT)]
         [NotNull]
@@ -72,7 +79,7 @@ namespace ECDatabaseEngine
         }
 
         /// <summary>
-        /// IEnumerator implementation: Set current Position before first item
+        /// IEnumerator implementation: Set current Position before to first record
         /// </summary>
         public void Reset()
         {
@@ -93,11 +100,21 @@ namespace ECDatabaseEngine
 
         public T JoinedTable<T>()
         {
-            return (T)joins.First(x => x.TableType == typeof(T)).Table;
-        }
+            try
+            { 
+                return (T)joins.First(x => x.TableType == typeof(T)).Table;
+            }
+            catch
+            { 
+                throw new ECJoinNotFoundException("Join for table '"+typeof(T).Name+"' does not exist");
+            }
+    }
 
         public void AddJoin(ECTable _table, string _onField ,ECJoinType _joinType)
-        {
+        {            
+            if (GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute)) && x.Name == _onField).Count() == 0)
+                throw new ECFieldNotFoundException("Field '" + _onField + "' not found in table '" + TableName + "'");            
+
             ECJoin join = new ECJoin();
             join.JoinType = _joinType;
             join.OnField = _onField;
@@ -109,8 +126,13 @@ namespace ECDatabaseEngine
 
         #region GetData
 
+        /// <summary>
+        /// Get the next record
+        /// </summary>
+        /// <returns>True if a record was found. False if no more record was found</returns>
         public bool Next()
         {
+            records[currentRecord].CopyFrom(this);
             bool ret = false;
             if (records.Count == 0)
                 return false;
@@ -129,11 +151,41 @@ namespace ECDatabaseEngine
             return ret;
         }
 
+        /// <summary>
+        /// Get the last record
+        /// </summary>
+        public void Last()
+        {
+            if (records.Count > 0)
+            {
+                currentRecord = records.Count-1;                
+            }
+            else
+            {                
+                currentRecord = 0;
+            }            
+            CopyFrom(records[currentRecord]);
+            InvokeMethodeOnJoinedTables("Last");
+        }
+
+        /// <summary>
+        /// Get the firs record
+        /// </summary>
+        public void First()
+        {
+            currentRecord = 0;
+            CopyFrom(records[currentRecord]);
+            InvokeMethodeOnJoinedTables("First");
+        }
+
         public bool MoveNext()
         {
             return Next();
         }        
 
+        /// <summary>
+        /// Load records from database.
+        /// </summary>
         public void FindSet()
         {                  
             InitTableDataFromDictionaryList(ECDatabaseConnection.Connection.GetData(this, filter, ranges));
@@ -184,8 +236,13 @@ namespace ECDatabaseEngine
         { 
             RecId = ECDatabaseConnection.Connection.Insert(this);
             Get(RecId);
+            Clear();
         }
 
+        /// <summary>
+        /// Deletes the current record from the database.
+        /// Has no impact on joined tables.
+        /// </summary>
         public void Delete()
         {
             if (records.Count == 0)
@@ -194,27 +251,94 @@ namespace ECDatabaseEngine
                 Init();
             }
             else
-            { 
+            {                
                 ECDatabaseConnection.Connection.Delete(this);
-                currentRecord = records.IndexOf(this);
-                records.Remove(this);
-                if (records.Count == 0)
-                { 
-                    currentRecord = 0;
-                    Init();
-                }
-                else
-                { 
-                    currentRecord = currentRecord % records.Count;            
-                    CopyFrom(records[currentRecord]);
-                }
+                Delete();
             }
+
         }
 
+        /// <summary>
+        /// Deletes all currently loaded records from the database.
+        /// Has no impact on joined tables.
+        /// </summary>
+        public void DeleteAll()
+        {
+            FindSet();
+            do
+            {
+                Delete();
+            } while (this.RecId==0);
+        }
+
+        /// <summary>
+        /// Deletes only loaded records. Calling this function has no impact on database
+        /// </summary>
+        internal void DeleteAndSynchronizeJoins()
+        {            
+            currentRecord = records.IndexOf(this);
+
+            records.Remove(this);
+
+            if (currentRecord > records.Count - 1) //Deleted last record
+                currentRecord = records.Count - 1;
+            else
+                currentRecord = currentRecord % records.Count;
+            CopyFrom(records[currentRecord]);
+
+            foreach (ECJoin j in joins)
+            {
+                ECTable table = ((ECTable)j.Table);
+                table.DeleteAndSynchronizeJoins();
+            }
+            
+        }
+
+        /// <summary>
+        /// Writes the current record to the database
+        /// Has no impact on joined tables.
+        /// </summary>
         public void Modify()
         {
             ECDatabaseConnection.Connection.Modify(this);
             records[currentRecord] = this;
+        }
+
+        /// <summary>
+        /// Returns the position of the current record in the loaded dataset
+        /// </summary>
+        /// <returns>Index of the current record</returns>
+        public int GetRecPos()
+        {
+            return currentRecord;
+        }
+
+        /// <summary>
+        /// Loads the record at the given position in the dataset
+        /// </summary>
+        /// <param name="_pos">Index of the record</param>
+        public void SetRecPos(int _pos)
+        {
+            if (_pos > records.Count - 1)
+                throw new IndexOutOfRangeException();
+
+            records[currentRecord].CopyFrom(this);
+            currentRecord = _pos;                           
+       
+            CopyFrom(records[currentRecord]);
+            InvokeMethodeOnJoinedTables("SetRecPos", new object[] { _pos });
+        }
+
+        /// <summary>
+        /// Writes all records to the database
+        /// </summary>
+        public void ModifyAll()
+        {
+            FindSet();
+            do
+            {
+                Modify();
+            } while (Next());
         }
 
         public void SynchronizeSchema()
@@ -230,6 +354,8 @@ namespace ECDatabaseEngine
             foreach (PropertyInfo sourcePi in _table.GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute))))
                 if ((targetPi = GetType().GetProperty(sourcePi.Name)) != null)
                     targetPi.SetValue(this, sourcePi.GetValue(_table));
+            globalRecId = _table.globalRecId;
+            Marked = _table.Marked;
         }
 
         public string DateTimeToSqlDate(DateTime _dt)
@@ -386,7 +512,9 @@ namespace ECDatabaseEngine
             {
                 table = (ECTable)Activator.CreateInstance(this.GetType());
                 table.InitRecordFromDictionary(d);
+                table.globalRecId = nextGlobalRecId;
                 records.Add(table);
+                nextGlobalRecId++;
             }
             foreach(ECJoin j in joins)
             {
@@ -632,17 +760,7 @@ namespace ECDatabaseEngine
         #region Interface
         public bool Equals(ECTable other)
         {
-            PropertyInfo targetPi;
-            foreach (PropertyInfo sourcePi in other.GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute))))
-                if ((targetPi = GetType().GetProperty(sourcePi.Name)) != null)
-                {
-                    if (!targetPi.GetValue(this).Equals(sourcePi.GetValue(other)))                     
-                        return false;
-                }
-                else
-                    return false;
-
-            return true;
+            return (globalRecId == other.globalRecId);
         }
 
         public IEnumerator GetEnumerator()
