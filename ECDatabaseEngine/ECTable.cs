@@ -479,6 +479,10 @@ namespace ECDatabaseEngine
                     _p.SetValue(this, value);
                     break;
 
+                case FieldType.TEXT:
+                    _p.SetValue(this, value);
+                    break;
+
                 default:
                     throw new NotImplementedException();
             }                        
