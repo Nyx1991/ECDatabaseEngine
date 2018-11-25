@@ -133,7 +133,7 @@ namespace ECDatabaseEngine
             return "driver=sqlite;dbPath=Path/To/Database.db3";            
         }
 
-        public List<Dictionary<string, string>> GetData(ECTable _table, Dictionary<string, string> _filter, Dictionary<string, KeyValuePair<string, string>> _ranges)
+        public List<Dictionary<string, string>> GetData(ECTable _table, Dictionary<string, string> _filter, Dictionary<string, KeyValuePair<string, string>> _ranges, List<string> _order)
         {
             Type t = _table.GetType();
             List<string> where = new List<string>();
@@ -146,7 +146,7 @@ namespace ECDatabaseEngine
 
             //Where
             command.Parameters.Clear();
-            _table.GetParameterizedWherClause(ref where, ref parms);
+            _table.GetParameterizedWhereClause(ref where, ref parms);
 
             foreach (KeyValuePair<string, string> kv in parms)
                 command.Parameters.AddWithValue(kv.Key, kv.Value);
@@ -157,6 +157,12 @@ namespace ECDatabaseEngine
                     sql += "(" + s + ") AND";
                 sql = sql.Substring(0, sql.Length - 4);
             }
+
+            //Order By
+            string orderClause = _table.GetOrderByClause();
+            if (orderClause.Length > 0)
+                sql += " ORDER BY " + orderClause + " " + _table.OrderType.ToString();
+
             sql += ";";
 
             command.CommandText = sql;
@@ -220,7 +226,18 @@ namespace ECDatabaseEngine
 
         public void Modify(ECTable _table)
         {
-            throw new NotImplementedException();
+            Type t = _table.GetType();
+            PropertyInfo[] properties = t.GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute), false)).ToArray();
+            string sql = "UPDATE `" + t.Name + "` SET ";
+
+            foreach (PropertyInfo p in properties)
+            {
+                sql += "`" + p.Name + "`=" + _table.GetValueInSqlFormat(p) + ",";
+            }
+            sql = sql.Substring(0, sql.Length - 1) + " WHERE RecId=" + _table.RecId + ";";
+
+            command.CommandText = sql;
+            command.ExecuteNonQuery();
         }
 
         public string FieldTypeToSqlType(FieldType _ft)

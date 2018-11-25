@@ -58,7 +58,7 @@ namespace ECDatabaseEngine
             }
         }
 
-        public List<Dictionary<string, string>> GetData(ECTable _table, Dictionary<string, string> _filter, Dictionary<string, KeyValuePair<string, string>> _ranges)
+        public List<Dictionary<string, string>> GetData(ECTable _table, Dictionary<string, string> _filter, Dictionary<string, KeyValuePair<string, string>> _ranges, List<string> _order)
         {
             command = new MySqlCommand();
             command.Connection = connection;
@@ -74,7 +74,7 @@ namespace ECDatabaseEngine
 
             //Where
             command.Parameters.Clear();
-            _table.GetParameterizedWherClause(ref where, ref parms);
+            _table.GetParameterizedWhereClause(ref where, ref parms);
 
             foreach (KeyValuePair<string, string> kv in parms)
                 command.Parameters.AddWithValue(kv.Key, kv.Value);
@@ -85,8 +85,13 @@ namespace ECDatabaseEngine
                     sql += "(" + s + ") AND";
                 sql = sql.Substring(0, sql.Length - 4);
             }
-            sql += ";";
 
+            //Order By
+            string orderClause = _table.GetOrderByClause();
+            if (orderClause.Length > 0)
+                sql += " ORDER BY "+ orderClause + " " + _table.OrderType.ToString();
+
+            sql += ";";
             command.CommandText = sql;
             command.Prepare();
 

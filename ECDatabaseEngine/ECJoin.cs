@@ -11,7 +11,8 @@ namespace ECDatabaseEngine
     internal class ECJoin
     {
         public dynamic Table { get; set; }
-        public string OnField { get; set; }
+        public string OnTargetField { get; set; }
+        public string OnSourceField { get; set; }
         public ECJoinType JoinType { get; set; }    
         public Type TableType { get { return Table.GetType(); } }
     }

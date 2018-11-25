@@ -23,6 +23,17 @@ namespace ConsoleTest
             //string connectionString = String.Format("driver=sqlite;dbPath=C:\\temp\\test.db3");
 
             ECDatabaseConnection.CreateConnection(connectionString);
+
+            Person p = new Person();
+            Address a = new Address();
+
+            a.AddOrderBy(nameof(a.City));
+            p.AddOrderBy(nameof(p.Name));
+
+            p.AddJoin(a, nameof(p.RefAddress), ECJoinType.Inner);
+
+            p.FindSet();
+
             Console.WriteLine(ECDatabaseConnection.IsConnected);                        
 
             ECDatabaseConnection.Disconnect();            

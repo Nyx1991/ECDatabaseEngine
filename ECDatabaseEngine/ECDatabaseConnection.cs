@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 namespace ECDatabaseEngine
 {
     public enum FieldType { VARCHAR, CHAR, INT, BLOB, BOOLEAN, DATETIME, DECIMAL, FLOAT, DOUBLE, DATE, TEXT };
+    public enum OrderType { ASC, DESC };
 
     public static class ECDatabaseConnection
     {

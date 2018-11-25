@@ -14,6 +14,9 @@ namespace ECDatabaseEngine
         protected List<ECTable> records;
         private Dictionary<string, string> filter;
         private Dictionary<string, KeyValuePair<string, string>> ranges;
+        private List<string> order;
+        public OrderType OrderType { get; set; }
+        private string SqlTableName { get => "`" + TableName + "`."; }
 
         private List<ECJoin> joins;
 
@@ -58,6 +61,8 @@ namespace ECDatabaseEngine
             filter = new Dictionary<string, string>();
             ranges = new Dictionary<string, KeyValuePair<string, string>>();
             joins = new List<ECJoin>();
+            order = new List<string>();
+            OrderType = OrderType.ASC;
             foreach (PropertyInfo p in this.GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute))))
             {
                 Type type = p.PropertyType;
@@ -76,6 +81,7 @@ namespace ECDatabaseEngine
             filter.Clear();
             ranges.Clear();
             joins.Clear();
+            order.Clear();
         }
 
         /// <summary>
@@ -84,13 +90,13 @@ namespace ECDatabaseEngine
         public void Reset()
         {
             InvokeMethodeOnJoinedTables("Reset");
-            currentRecord = 0;            
+            currentRecord = 0;
         }
 
         protected void DeleteRecords()
         {
-            if(records != null)
-            { 
+            if (records != null)
+            {
                 records.Clear();
             }
         }
@@ -101,27 +107,44 @@ namespace ECDatabaseEngine
         public T JoinedTable<T>()
         {
             try
-            { 
+            {
                 return (T)joins.First(x => x.TableType == typeof(T)).Table;
             }
             catch
-            { 
-                throw new ECJoinNotFoundException("Join for table '"+typeof(T).Name+"' does not exist");
+            {
+                throw new ECJoinNotFoundException("Join for table '" + typeof(T).Name + "' does not exist");
             }
-    }
+        }
 
-        public void AddJoin(ECTable _table, string _onField ,ECJoinType _joinType)
-        {            
-            if (GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute)) && x.Name == _onField).Count() == 0)
-                throw new ECFieldNotFoundException("Field '" + _onField + "' not found in table '" + TableName + "'");            
+        public void AddJoin(ECTable _table, string _onSourceField, ECJoinType _joinType)
+        {
+            if (GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute)) && x.Name == _onSourceField).Count() == 0)
+                throw new ECFieldNotFoundException("Field '" + _onSourceField + "' not found in table '" + TableName + "'");
 
             ECJoin join = new ECJoin();
             join.JoinType = _joinType;
-            join.OnField = _onField;
+            join.OnSourceField = _onSourceField;
             join.Table = _table;
             joins.Add(join);
         }
-        
+
+        public void AddJoin(ECTable _table, string _onSourceField, string _onTargetField, ECJoinType _joinType)
+        {
+            if (GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute)) && x.Name == _onSourceField).Count() == 0)
+                throw new ECFieldNotFoundException("Field '" + _onSourceField + "' not found in table '" + TableName + "'");
+
+            if (_table.GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute)) && x.Name == _onTargetField).Count() == 0)
+                throw new ECFieldNotFoundException("Field '" + _onTargetField + "' not found in table '" + _table.TableName + "'");
+
+
+            ECJoin join = new ECJoin();
+            join.JoinType = _joinType;
+            join.OnTargetField = _onTargetField;
+            join.OnSourceField = _onSourceField;
+            join.Table = _table;
+            joins.Add(join);
+        }
+
         #endregion
 
         #region GetData
@@ -132,20 +155,22 @@ namespace ECDatabaseEngine
         /// <returns>True if a record was found. False if no more record was found</returns>
         public bool Next()
         {
+            if (records.Count == 0)
+                return false;
             records[currentRecord].CopyFrom(this);
             bool ret = false;
             if (records.Count == 0)
                 return false;
             else if (currentRecord >= records.Count - 1)
             {
-                currentRecord = 0;                
+                currentRecord = 0;
                 ret = false;
             }
             else
-            {                
+            {
                 currentRecord++;
                 ret = true;
-            }            
+            }
             CopyFrom(records[currentRecord]);
             InvokeMethodeOnJoinedTables("Next");
             return ret;
@@ -158,12 +183,12 @@ namespace ECDatabaseEngine
         {
             if (records.Count > 0)
             {
-                currentRecord = records.Count-1;                
+                currentRecord = records.Count - 1;
             }
             else
-            {                
+            {
                 currentRecord = 0;
-            }            
+            }
             CopyFrom(records[currentRecord]);
             InvokeMethodeOnJoinedTables("Last");
         }
@@ -181,28 +206,30 @@ namespace ECDatabaseEngine
         public bool MoveNext()
         {
             return Next();
-        }        
+        }
 
         /// <summary>
         /// Load records from database.
         /// </summary>
         public void FindSet()
-        {                  
-            InitTableDataFromDictionaryList(ECDatabaseConnection.Connection.GetData(this, filter, ranges));
-        }     
-        
+        {
+            InitTableDataFromDictionaryList(ECDatabaseConnection.Connection.GetData(this, filter, ranges, order));
+        }
+
         #endregion
 
-        #region Filter Data
+        #region Filter Data and order
         public void Get(int _recId)
         {
             filter = new Dictionary<string, string>();
             filter.Add("RecId", _recId.ToString());
             InitTableDataFromDictionaryList(ECDatabaseConnection.Connection.GetData(this, filter,
-                                                                                    new Dictionary<string, KeyValuePair<string, string>>()));
+                                                                                    new Dictionary<string,
+                                                                                    KeyValuePair<string, string>>(),
+                                                                                    order));
         }
 
-        public void SetFilter(string _fieldName, string _filterString="")
+        public void SetFilter(string _fieldName, string _filterString = "")
         {
             if (GetType().GetProperty(_fieldName) == null)
                 new Exception(String.Format("Field with name '{0}' does not exist in {1}", _fieldName, GetType().Name));
@@ -216,7 +243,7 @@ namespace ECDatabaseEngine
                 filter.Add(_fieldName, _filterString);
         }
 
-        public void SetRange(string _fieldName, string _from = "", string _to="")
+        public void SetRange(string _fieldName, string _from = "", string _to = "")
         {
             if (GetType().GetProperty(_fieldName) == null)
                 new Exception(String.Format("Field with name '{0}' does not exist in {1}", _fieldName, GetType().Name));
@@ -225,15 +252,21 @@ namespace ECDatabaseEngine
                 if (_from.Equals("") && _to.Equals(""))
                     ranges.Remove(_fieldName);
                 else
-                    ranges[_fieldName] = new KeyValuePair<string,string>(_from, _to);
+                    ranges[_fieldName] = new KeyValuePair<string, string>(_from, _to);
             else
                 ranges.Add(_fieldName, new KeyValuePair<string, string>(_from, _to));
         }
+
+        public void AddOrderBy(string _fieldName)
+        {
+            order.Add(_fieldName);
+        }
+
         #endregion
 
         #region Database operations
         public void Insert()
-        { 
+        {
             RecId = ECDatabaseConnection.Connection.Insert(this);
             Get(RecId);
             Clear();
@@ -246,14 +279,13 @@ namespace ECDatabaseEngine
         public void Delete()
         {
             if (records.Count == 0)
-            { 
+            {
                 currentRecord = 0;
                 Init();
             }
             else
-            {                
+            {
                 ECDatabaseConnection.Connection.Delete(this);
-                Delete();
             }
 
         }
@@ -268,14 +300,14 @@ namespace ECDatabaseEngine
             do
             {
                 Delete();
-            } while (this.RecId==0);
+            } while (this.RecId != 0);
         }
 
         /// <summary>
         /// Deletes only loaded records. Calling this function has no impact on database
         /// </summary>
         internal void DeleteAndSynchronizeJoins()
-        {            
+        {
             currentRecord = records.IndexOf(this);
 
             records.Remove(this);
@@ -291,7 +323,7 @@ namespace ECDatabaseEngine
                 ECTable table = ((ECTable)j.Table);
                 table.DeleteAndSynchronizeJoins();
             }
-            
+
         }
 
         /// <summary>
@@ -323,8 +355,8 @@ namespace ECDatabaseEngine
                 throw new IndexOutOfRangeException();
 
             records[currentRecord].CopyFrom(this);
-            currentRecord = _pos;                           
-       
+            currentRecord = _pos;
+
             CopyFrom(records[currentRecord]);
             InvokeMethodeOnJoinedTables("SetRecPos", new object[] { _pos });
         }
@@ -380,7 +412,7 @@ namespace ECDatabaseEngine
             string sql = "";
             TableFieldAttribute tfa = this.GetType().GetCustomAttribute<TableFieldAttribute>();
             tfa = _p.GetCustomAttribute<TableFieldAttribute>();
-            if (tfa.type == FieldType.VARCHAR || tfa.type == FieldType.CHAR)
+            if (tfa.type == FieldType.VARCHAR || tfa.type == FieldType.CHAR || tfa.type == FieldType.TEXT)
                 sql += "'" + _p.GetValue(this).ToString() + "'";
             else if (tfa.type == FieldType.INT || tfa.type == FieldType.DECIMAL || tfa.type == FieldType.FLOAT || tfa.type == FieldType.DOUBLE)
                 sql += _p.GetValue(this).ToString();
@@ -395,7 +427,7 @@ namespace ECDatabaseEngine
                 sql = String.Format("'{0}-{1}-{2} {3}:{4}:{5}.{6}'", dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute, dt.Second, dt.Millisecond);
             }
             else
-                new NotImplementedException();
+                throw new NotImplementedException();
 
             if (tfa.type == FieldType.BOOLEAN)
                 sql += "'" + _p.GetValue(this) + "',";
@@ -407,11 +439,11 @@ namespace ECDatabaseEngine
         {
             TableFieldAttribute tfa = _p.GetCustomAttribute<TableFieldAttribute>();
             string[] date, time;
-                        
+
             switch (tfa.type)
             {
                 case FieldType.BOOLEAN:
-                    if(value == "")
+                    if (value == "")
                         _p.SetValue(this, false);
                     else
                         _p.SetValue(this, Convert.ToBoolean(value));
@@ -428,7 +460,7 @@ namespace ECDatabaseEngine
                     if (value == "")
                         _p.SetValue(this, new DateTime());
                     else
-                    { 
+                    {
                         date = value.Split('-');
                         _p.SetValue(this, new DateTime(Convert.ToInt32(date[0]), Convert.ToInt32(date[1]), Convert.ToInt32(date[2])));
                     }
@@ -485,8 +517,8 @@ namespace ECDatabaseEngine
 
                 default:
                     throw new NotImplementedException();
-            }                        
-        }                
+            }
+        }
 
         internal void InitRecordFromDictionary(Dictionary<string, string> _values)
         {
@@ -520,7 +552,7 @@ namespace ECDatabaseEngine
                 records.Add(table);
                 nextGlobalRecId++;
             }
-            foreach(ECJoin j in joins)
+            foreach (ECJoin j in joins)
             {
                 ECTable joinedTable = (ECTable)j.Table;
                 joinedTable.InitTableDataFromDictionaryList(_dataDict);
@@ -535,26 +567,22 @@ namespace ECDatabaseEngine
                 CopyFrom(records.First());
             }
         }
-        
-        internal void GetParameterizedWherClause(ref List<string> _where, ref Dictionary<string, string> _parameters)
-        {
-            string sqlTableName = "`"+TableName+ "`.";
-            _where.Clear();
-            _parameters.Clear();
-            
+
+        internal void GetParameterizedWhereClause(ref List<string> _where, ref Dictionary<string, string> _parameters)
+        {            
             foreach (KeyValuePair<string, KeyValuePair<string, string>> kp in ranges)
                 if (kp.Value.Value.Equals(""))
                 {
                     string keyParm = TableName + kp.Key;
                     _parameters.Add(keyParm, kp.Value.Key);
-                    _where.Add(sqlTableName+kp.Key + "= @" + keyParm);                    
+                    _where.Add(SqlTableName + kp.Key + "=@" + keyParm);
                 }
                 else
                 {
                     string keyParm = TableName + kp.Key;
                     _parameters.Add("K" + keyParm, kp.Value.Key);
                     _parameters.Add("V" + keyParm, kp.Value.Value);
-                    _where.Add("(" + sqlTableName+kp.Key + " BETWEEN @K" + keyParm + " AND @V" + keyParm + ")");
+                    _where.Add("(" + SqlTableName + kp.Key + " BETWEEN @K" + keyParm + " AND @V" + keyParm + ")");
                 }
 
             foreach (KeyValuePair<string, string> kp in filter)
@@ -562,13 +590,28 @@ namespace ECDatabaseEngine
                 _where.Add(ParseFilterString(kp.Key, kp.Value, ref _parameters));
             }
 
-            foreach(ECJoin j in joins)
+            foreach (ECJoin j in joins)
             {
                 ECTable joinTable = (ECTable)j.Table;
-                joinTable.GetParameterizedWherClause(ref _where, ref _parameters);
+                joinTable.GetParameterizedWhereClause(ref _where, ref _parameters);
             }
         }
-        
+
+        internal string GetOrderByClause()
+        {
+            string ret = "";
+
+            foreach (string s in order)
+                ret += SqlTableName + s + ",";
+
+            foreach (ECJoin j in joins)
+            { 
+                ECTable joinTable = (ECTable)j.Table;
+                ret += joinTable.GetOrderByClause() + ",";
+            }
+            return ret.Substring(0, ret.Length - 1);
+        }
+
         internal string ParseFilterString(string _fieldName, string _filter, ref Dictionary<string, string> _parameter)
         {
             string fieldName = "`" + _fieldName + "`";
@@ -594,7 +637,7 @@ namespace ECDatabaseEngine
                         break;
                     case '>':
                         if (!foundPoint)
-                            clause += '<';
+                            clause += '>';
                         else
                         {
                             clause += ProcessFromToOperator(i, val[valId % 2], val[valId + 1 % 2],
@@ -752,7 +795,10 @@ namespace ECDatabaseEngine
                         ret += " RIGHT OUTER JOIN ";
                         break;
                 }
-                ret += "`"+joinTable.TableName+"` ON "+"`"+joinTable.TableName+"`.RecId=`"+TableName+"`."+j.OnField;
+                if (j.OnTargetField != null)
+                    ret += "`"+joinTable.TableName+"` ON "+"`"+joinTable.TableName+"`."+j.OnTargetField + "=`"+TableName+"`."+j.OnSourceField;
+                else
+                    ret += "`" + joinTable.TableName + "` ON " + "`" + joinTable.TableName + "`.RecId=`" + TableName + "`." + j.OnSourceField;
                 ret += joinTable.MakeJoins();
             }
 

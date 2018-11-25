@@ -18,7 +18,7 @@ namespace ECDatabaseEngine
         void Delete(ECTable _table);
         void Modify(ECTable _table);
         bool Exists(ECTable _table);
-        List<Dictionary<string, string>> GetData(ECTable _table, Dictionary<string, string> _filter, Dictionary<string, KeyValuePair<string, string>> _ranges);
+        List<Dictionary<string, string>> GetData(ECTable _table, Dictionary<string, string> _filter, Dictionary<string, KeyValuePair<string, string>> _ranges, List<string> _order);
         void CreateTableIfNotExist(ECTable _table);
         void AlterTableFields(ECTable _table);      
         string GetConnectionStringExample();
