@@ -608,8 +608,11 @@ namespace ECDatabaseEngine
             { 
                 ECTable joinTable = (ECTable)j.Table;
                 ret += joinTable.GetOrderByClause() + ",";
-            }
-            return ret.Substring(0, ret.Length - 1);
+            }            
+            if (ret.Length > 0)
+                return ret.Substring(0, ret.Length - 1);
+            else
+                return ret;
         }
 
         internal string ParseFilterString(string _fieldName, string _filter, ref Dictionary<string, string> _parameter)

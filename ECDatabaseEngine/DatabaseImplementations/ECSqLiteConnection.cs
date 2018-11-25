@@ -160,7 +160,7 @@ namespace ECDatabaseEngine
 
             //Order By
             string orderClause = _table.GetOrderByClause();
-            if (orderClause.Length > 0)
+            if (orderClause.Length > 1)
                 sql += " ORDER BY " + orderClause + " " + _table.OrderType.ToString();
 
             sql += ";";
@@ -174,7 +174,7 @@ namespace ECDatabaseEngine
         {
             List<Dictionary<string, string>> ret = new List<Dictionary<string, string>>();
             Dictionary<string, string> currentRecord = new Dictionary<string, string>();
-
+            Console.WriteLine(command.CommandText);
             SQLiteDataReader res = command.ExecuteReader();
 
             while (res.Read())
