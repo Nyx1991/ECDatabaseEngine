@@ -232,12 +232,7 @@ namespace ECDatabaseEngine
                 using (MySqlCommand cmd = new MySqlCommand(createStmt, connection))
                     cmd.ExecuteNonQuery();
             }
-        }
-
-        public string GetConnectionStringExample()
-        {
-            return "driver=mysql;server=localhost;database=database;user=Username;pass=Password";
-        }
+        }        
 
         public string FieldTypeToSqlType(FieldType _ft)
         {
@@ -322,6 +317,11 @@ namespace ECDatabaseEngine
                     _fieldsToDelete.Add(kv.Key, kv.Value);
 
             res.Close();
+        }
+
+        public void SetPassword(string _password)
+        {
+            throw new Exception("MySQL hast no password functionallity");
         }
     }
 }

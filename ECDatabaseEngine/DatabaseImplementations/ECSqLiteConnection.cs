@@ -41,11 +41,13 @@ namespace ECDatabaseEngine
         try
         {
             connection = new SQLiteConnection("Data Source=" + _params["dbpath"]);
-            connection.Open();
+            if (_params.Keys.Contains("pass"))
+                connection.SetPassword(_params["pass"]);
+            connection.Open();                
             command = new SQLiteCommand(connection);
             currentDatabase = fi.Name;
             currentUser = "";
-            isConnected = true;
+            isConnected = true;                
         }
         catch (Exception e)
         {
@@ -126,12 +128,7 @@ namespace ECDatabaseEngine
             Type t = _table.GetType();
             command.CommandText = "SELECT * FROM sqlite_master where type = 'table' AND name='"+ t.Name + "'";
             return (command.ExecuteScalar() != null);
-        }
-
-        public string GetConnectionStringExample()
-        {            
-            return "driver=sqlite;dbPath=Path/To/Database.db3";            
-        }
+        }        
 
         public List<Dictionary<string, string>> GetData(ECTable _table, Dictionary<string, string> _filter, Dictionary<string, KeyValuePair<string, string>> _ranges, List<string> _order)
         {
@@ -173,8 +170,7 @@ namespace ECDatabaseEngine
         protected List<Dictionary<string, string>> ExecuteSql()
         {
             List<Dictionary<string, string>> ret = new List<Dictionary<string, string>>();
-            Dictionary<string, string> currentRecord = new Dictionary<string, string>();
-            Console.WriteLine(command.CommandText);
+            Dictionary<string, string> currentRecord = new Dictionary<string, string>();            
             SQLiteDataReader res = command.ExecuteReader();
 
             while (res.Read())
@@ -354,6 +350,11 @@ namespace ECDatabaseEngine
                     _fieldsToDelete.Add(kv.Key, kv.Value);
 
             res.Close();
+        }
+
+        public void SetPassword(string _password)
+        {
+            connection?.ChangePassword(_password);
         }
     }
 }

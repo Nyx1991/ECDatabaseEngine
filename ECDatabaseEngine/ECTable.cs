@@ -9,12 +9,24 @@ using MySql.Data.MySqlClient;
 
 namespace ECDatabaseEngine
 {
+    /// <summary>
+    /// Abstract table class. Use this class as a base for your tables.
+    /// </summary>
     public abstract class ECTable : IEnumerator, IEnumerable, IEquatable<ECTable>
     {
+        /// <summary>
+        /// Internal list which is used to store all loaded records.
+        /// The records are stored as ECTable instances itself.
+        /// </summary>
         protected List<ECTable> records;
         private Dictionary<string, string> filter;
         private Dictionary<string, KeyValuePair<string, string>> ranges;
         private List<string> order;
+        
+        /// <summary>
+        /// Determines in which order the records should be loaded.
+        /// Use AddOrderBy(_fieldName) to add fields you want the records to be orderd after
+        /// </summary>
         public OrderType OrderType { get; set; }
         private string SqlTableName { get => "`" + TableName + "`."; }
 
@@ -24,26 +36,65 @@ namespace ECDatabaseEngine
         int globalRecId = 0;
         int currentRecord;
 
+        #region EventHandler
         /// <summary>
-        /// Markes a record
+        /// Invoked before a new record will be inserted an written to the database.
         /// </summary>
-        public bool Marked { get; set; }
+        public EventHandler<ECTable> OnBeforeInsert;
+        /// <summary>
+        /// Invoked after a new record has been inserted and written to the database.
+        /// </summary>
+        public EventHandler<ECTable> OnAfterInsert;
+        /// <summary>
+        /// Invoked before all changes on the current record will be written to the database.
+        /// </summary>
+        public EventHandler<ECTable> OnBeforeModify;
+        /// <summary>
+        /// Invoked after all changes has been written to the database.
+        /// </summary>
+        public EventHandler<ECTable> OnAfterModify;
+        /// <summary>
+        /// Invoked before the current record will be deleted from the database.
+        /// </summary>
+        public EventHandler<ECTable> OnBeforeDelete;        
+        /// <summary>
+        /// Invoked after the current record has been deleted from the database.
+        /// </summary>
+        public EventHandler<ECTable> OnAfterDelete;
+        /// <summary>
+        /// Invoked after a new record has been loaded.
+        /// Can be used to keep UI up to date, for example.
+        /// </summary>
+        public EventHandler<ECTable> OnChanged;
+        #endregion
 
+        /// <summary>
+        /// Ongoing primary key of the table.
+        /// This is a unique identifier (table scope).
+        /// </summary>
         [TableField(FieldType.INT)]
         [NotNull]
         [PrimaryKey]
-        [AutoIncrement]
+        [AutoIncrement]        
         public int RecId { get; internal set; }
-
+        /// <summary>
+        /// IEnumerator implementation. Returns the current record.
+        /// </summary>
         public object Current => records[currentRecord];
-
+        /// <summary>
+        /// Record count.
+        /// </summary>
         public int Count => records.Count;
-
+        /// <summary>
+        /// Return the name of the table.
+        /// </summary>
         public String TableName { get { return this.GetType().Name; } }
-
+        /// <summary>
+        /// Initializes a new ECTable instance.
+        /// </summary>
         public ECTable()
         {
-            Init();
+            Init();            
         }
 
         #region Init/Reset/Clear
@@ -71,6 +122,7 @@ namespace ECDatabaseEngine
                 else
                     p.SetValue(this, "");
             }
+            OnChanged?.Invoke(this, this);
         }
 
         /// <summary>
@@ -85,14 +137,20 @@ namespace ECDatabaseEngine
         }
 
         /// <summary>
-        /// IEnumerator implementation: Set current Position before to first record
+        /// IEnumerator implementation: Set current Position to first record
         /// </summary>
         public void Reset()
         {
             InvokeMethodeOnJoinedTables("Reset");
             currentRecord = 0;
+            CopyFromSilent(records[0]);
+            OnChanged?.Invoke(this, this);
         }
 
+        /// <summary>
+        /// Clears the internal record-list.
+        /// In other words: unload all records.
+        /// </summary>
         protected void DeleteRecords()
         {
             if (records != null)
@@ -103,7 +161,12 @@ namespace ECDatabaseEngine
         #endregion
 
         #region Joins
-
+        /// <summary>
+        /// Get the instance of a table you Joined before.
+        /// Make sure to use a subclass of ECTable.
+        /// </summary>
+        /// <typeparam name="T">Type of the joined table (ECTable subclass)</typeparam>
+        /// <returns>Instance of the joined table with all records.</returns>
         public T JoinedTable<T>()
         {
             try
@@ -115,7 +178,13 @@ namespace ECDatabaseEngine
                 throw new ECJoinNotFoundException("Join for table '" + typeof(T).Name + "' does not exist");
             }
         }
-
+        /// <summary>
+        /// Join a table. You can only join a table once per type.
+        /// </summary>
+        /// <param name="_table">Instance of the table you want to join.</param>
+        /// <param name="_onSourceField">The field on this table to which the join should be connected to.
+        /// In the other table it will be the RecId. (Join someTable ON thisTable.SourceField=_table.RecId)</param>
+        /// <param name="_joinType">INNER, LEFT OUTER or RIGHT OUTER</param>
         public void AddJoin(ECTable _table, string _onSourceField, ECJoinType _joinType)
         {
             if (GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute)) && x.Name == _onSourceField).Count() == 0)
@@ -127,7 +196,14 @@ namespace ECDatabaseEngine
             join.Table = _table;
             joins.Add(join);
         }
-
+        /// <summary>
+        /// Join a table. You can only join a table once per type.
+        /// </summary>
+        /// <param name="_table">Instance of the table you want to join.</param>
+        /// <param name="_onSourceField">The field on this table to which the join should be connected to.</param>
+        /// <param name="_onTargetField">The field on the other table to which the join should be connected to.
+        /// In the other table it will be the RecId. (Join someTable ON thisTable.SourceField=_table.TargetField)</param>
+        /// <param name="_joinType">INNER, LEFT OUTER or RIGHT OUTER</param>
         public void AddJoin(ECTable _table, string _onSourceField, string _onTargetField, ECJoinType _joinType)
         {
             if (GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute)) && x.Name == _onSourceField).Count() == 0)
@@ -157,7 +233,7 @@ namespace ECDatabaseEngine
         {
             if (records.Count == 0)
                 return false;
-            records[currentRecord].CopyFrom(this);
+            records[currentRecord].CopyFromSilent(this);
             bool ret = false;
             if (records.Count == 0)
                 return false;
@@ -171,8 +247,9 @@ namespace ECDatabaseEngine
                 currentRecord++;
                 ret = true;
             }
-            CopyFrom(records[currentRecord]);
+            CopyFromSilent(records[currentRecord]);
             InvokeMethodeOnJoinedTables("Next");
+            OnChanged?.Invoke(this, this);
             return ret;
         }
 
@@ -189,8 +266,9 @@ namespace ECDatabaseEngine
             {
                 currentRecord = 0;
             }
-            CopyFrom(records[currentRecord]);
+            CopyFromSilent(records[currentRecord]);
             InvokeMethodeOnJoinedTables("Last");
+            OnChanged?.Invoke(this, this);
         }
 
         /// <summary>
@@ -199,10 +277,15 @@ namespace ECDatabaseEngine
         public void First()
         {
             currentRecord = 0;
-            CopyFrom(records[currentRecord]);
+            CopyFromSilent(records[currentRecord]);
             InvokeMethodeOnJoinedTables("First");
+            OnChanged?.Invoke(this, this);
         }
 
+        /// <summary>
+        /// IEnumerable implementation.
+        /// </summary>
+        /// <returns>True: Some more records to come. False: No more records to come.</returns>
         public bool MoveNext()
         {
             return Next();
@@ -211,14 +294,20 @@ namespace ECDatabaseEngine
         /// <summary>
         /// Load records from database.
         /// </summary>
-        public void FindSet()
+        public void FindSet(bool _invokeEvent = true)
         {
             InitTableDataFromDictionaryList(ECDatabaseConnection.Connection.GetData(this, filter, ranges, order));
+            if (_invokeEvent)
+                OnChanged?.Invoke(this, this);
         }
 
         #endregion
 
         #region Filter Data and order
+        /// <summary>
+        /// Get a specific record from the database by its RecId
+        /// </summary>
+        /// <param name="_recId">RecId of the record</param>
         public void Get(int _recId)
         {
             filter = new Dictionary<string, string>();
@@ -227,8 +316,13 @@ namespace ECDatabaseEngine
                                                                                     new Dictionary<string,
                                                                                     KeyValuePair<string, string>>(),
                                                                                     order));
+            OnChanged?.Invoke(this, this);
         }
-
+        /// <summary>
+        /// Add a filterstring on a field.          
+        /// </summary>
+        /// <param name="_fieldName">Field the filter should be applied to.</param>
+        /// <param name="_filterString">Filter string. Leave empty to remove the filter.</param>
         public void SetFilter(string _fieldName, string _filterString = "")
         {
             if (GetType().GetProperty(_fieldName) == null)
@@ -242,7 +336,12 @@ namespace ECDatabaseEngine
             else
                 filter.Add(_fieldName, _filterString);
         }
-
+        /// <summary>
+        /// Add a range on a field
+        /// </summary>
+        /// <param name="_fieldName">Field the range should be applied to.</param>
+        /// <param name="_from">From value. Leave empty to remove the range.</param>
+        /// <param name="_to">To value</param>
         public void SetRange(string _fieldName, string _from = "", string _to = "")
         {
             if (GetType().GetProperty(_fieldName) == null)
@@ -256,7 +355,10 @@ namespace ECDatabaseEngine
             else
                 ranges.Add(_fieldName, new KeyValuePair<string, string>(_from, _to));
         }
-
+        /// <summary>
+        /// Add field you want your result to be orderd after.
+        /// </summary>
+        /// <param name="_fieldName"></param>
         public void AddOrderBy(string _fieldName)
         {
             order.Add(_fieldName);
@@ -265,11 +367,16 @@ namespace ECDatabaseEngine
         #endregion
 
         #region Database operations
+        /// <summary>
+        /// Insert a new record to the database. Make sure to fill it before.
+        /// </summary>
         public void Insert()
         {
+            OnBeforeInsert?.Invoke(this, this);
             RecId = ECDatabaseConnection.Connection.Insert(this);
             Get(RecId);
             Clear();
+            OnAfterInsert?.Invoke(this, this);
         }
 
         /// <summary>
@@ -278,6 +385,7 @@ namespace ECDatabaseEngine
         /// </summary>
         public void Delete()
         {
+            OnBeforeDelete?.Invoke(this, this);
             if (records.Count == 0)
             {
                 currentRecord = 0;
@@ -286,14 +394,15 @@ namespace ECDatabaseEngine
             else
             {
                 ECDatabaseConnection.Connection.Delete(this);
+                OnChanged?.Invoke(this, this);
             }
-
+            OnAfterDelete?.Invoke(this, this);           
         }
 
         /// <summary>
         /// Deletes all currently loaded records from the database.
         /// Has no impact on joined tables.
-        /// </summary>
+        /// </summary>        
         public void DeleteAll()
         {
             FindSet();
@@ -301,39 +410,19 @@ namespace ECDatabaseEngine
             {
                 Delete();
             } while (this.RecId != 0);
-        }
+            OnChanged?.Invoke(this, this);
+        }     
 
         /// <summary>
-        /// Deletes only loaded records. Calling this function has no impact on database
-        /// </summary>
-        internal void DeleteAndSynchronizeJoins()
-        {
-            currentRecord = records.IndexOf(this);
-
-            records.Remove(this);
-
-            if (currentRecord > records.Count - 1) //Deleted last record
-                currentRecord = records.Count - 1;
-            else
-                currentRecord = currentRecord % records.Count;
-            CopyFrom(records[currentRecord]);
-
-            foreach (ECJoin j in joins)
-            {
-                ECTable table = ((ECTable)j.Table);
-                table.DeleteAndSynchronizeJoins();
-            }
-
-        }
-
-        /// <summary>
-        /// Writes the current record to the database
+        /// Writes the current record to the database.
         /// Has no impact on joined tables.
         /// </summary>
         public void Modify()
         {
+            OnBeforeModify?.Invoke(this, this);
             ECDatabaseConnection.Connection.Modify(this);
             records[currentRecord] = this;
+            OnAfterModify?.Invoke(this, this);
         }
 
         /// <summary>
@@ -354,11 +443,12 @@ namespace ECDatabaseEngine
             if (_pos > records.Count - 1)
                 throw new IndexOutOfRangeException();
 
-            records[currentRecord].CopyFrom(this);
+            records[currentRecord].CopyFromSilent(this);
             currentRecord = _pos;
 
-            CopyFrom(records[currentRecord]);
+            CopyFromSilent(records[currentRecord]);
             InvokeMethodeOnJoinedTables("SetRecPos", new object[] { _pos });
+            OnChanged?.Invoke(this, this);
         }
 
         /// <summary>
@@ -373,6 +463,10 @@ namespace ECDatabaseEngine
             } while (Next());
         }
 
+        /// <summary>
+        /// Synchronizes the table schema to the database.
+        /// Important: This can lead to data loss.
+        /// </summary>
         public void SynchronizeSchema()
         {
             ECDatabaseConnection.SynchronizeSchema(this);
@@ -380,21 +474,44 @@ namespace ECDatabaseEngine
         #endregion
 
         #region Data manipulation: Copy and convert
+
+        /// <summary>
+        /// Copy the content of all fields from the currently active record of a given tabel
+        /// to the currently active record of this table
+        /// </summary>
+        /// <param name="_table">Table from which the data should be copied</param>
         public void CopyFrom(ECTable _table)
+        {
+            CopyFromSilent(_table);
+            OnChanged?.Invoke(this, this);
+        }
+
+        /// <summary>
+        /// Behaves like CopyFrom. Just doesnt invoke the OnChange event
+        /// </summary>
+        /// <param name="_table">Table from which the data should be copied</param>
+        protected void CopyFromSilent(ECTable _table)
         {
             PropertyInfo targetPi;
             foreach (PropertyInfo sourcePi in _table.GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute))))
                 if ((targetPi = GetType().GetProperty(sourcePi.Name)) != null)
                     targetPi.SetValue(this, sourcePi.GetValue(_table));
             globalRecId = _table.globalRecId;
-            Marked = _table.Marked;
         }
-
+        /// <summary>
+        /// Convert a DateTime variable into the SQL date notation.
+        /// </summary>
+        /// <param name="_dt">DateTime to be converted.></param>
+        /// <returns>String with date in SQL format</returns>
         public string DateTimeToSqlDate(DateTime _dt)
         {
             return String.Format("{0}-{1}-{2}", _dt.Year, _dt.Month, _dt.Day);
         }
-
+        /// <summary>
+        /// Convert a DateTime variable into the SQL date-time notation.
+        /// </summary>
+        /// <param name="_dt">DateTime to be converted.></param>
+        /// <returns>String with date-time in SQL format</returns>
         public string DateTimeToSqlDateTime(DateTime _dt)
         {
             return String.Format("{0}-{1}-{2} {3}:{4}:{5}.{6}", _dt.Year, _dt.Month, _dt.Day, _dt.Hour, _dt.Minute, _dt.Second, _dt.Millisecond);
@@ -564,7 +681,7 @@ namespace ECDatabaseEngine
             else
             {
                 currentRecord = 0;
-                CopyFrom(records.First());
+                CopyFromSilent(records.First());
             }
         }
 
@@ -811,16 +928,27 @@ namespace ECDatabaseEngine
         #endregion
 
         #region Interface
-        public bool Equals(ECTable other)
+        /// <summary>
+        /// IEquatable implementation.
+        /// </summary>
+        /// <param name="_other">Table to which this table should be compared to.</param>
+        /// <returns>True: if both RecIds are the same. False: If not so.</returns>
+        public bool Equals(ECTable _other)
         {
-            return (globalRecId == other.globalRecId);
+            return (globalRecId == _other.globalRecId);
         }
-
+        /// <summary>
+        /// IEnumerator implementation.
+        /// </summary>
+        /// <returns>IEnumerator</returns>
         public IEnumerator GetEnumerator()
         {
             return this;
         }
-
+        /// <summary>
+        /// Return the content of the current record as string.
+        /// </summary>
+        /// <returns>Contents of all fields.</returns>
         override
         public string ToString()
         {

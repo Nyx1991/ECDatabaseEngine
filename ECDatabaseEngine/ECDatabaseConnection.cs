@@ -49,7 +49,13 @@ namespace ECDatabaseEngine
             Connection.CreateTableIfNotExist(_table);
             Connection.AlterTableFields(_table);
         }
-        
+
+        public static void PrintConnectionStrings()
+        {
+            Console.WriteLine("driver=mysql;server=localhost;database=database;user=Username;pass=Password");
+            Console.WriteLine("driver=sqlite;dbPath=Path/To/Database.db3[;pass=Secret]");
+        }
+
         private static void ProcessConnectionString(string _connStr)
         {
             parms = new Dictionary<string, string>();
@@ -59,7 +65,18 @@ namespace ECDatabaseEngine
             {
                 parms.Add(kvPair.Split('=')[0].ToLower(), kvPair.Split('=')[1]);
             }
-        }
+        }        
 
+        public static void SetPassword(string _pass)
+        {
+            if (!Connection.IsConnected)
+                throw new Exception("Not connected to the database");
+
+            Connection.SetPassword(_pass);
+            if (!parms.Keys.Contains("pass"))
+                parms.Add("pass", _pass);
+            Connection.Disconnect();
+            Connection.Connect(parms);
+        }
     }
 }

@@ -1,0 +1,15 @@
+E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\bin\Release\ECDatabaseWinFormsExtension.dll
+E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\bin\Release\ECDatabaseWinFormsExtension.pdb
+E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\bin\Release\ECDatabaseEngine.dll
+E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\bin\Release\MySql.Data.dll
+E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\bin\Release\System.Data.SQLite.dll
+E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\bin\Release\ECDatabaseEngine.pdb
+E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\bin\Release\ECDatabaseEngine.dll.config
+E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\bin\Release\MySql.Data.xml
+E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\bin\Release\System.Data.SQLite.xml
+E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\bin\Release\System.Data.SQLite.dll.config
+E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\obj\Release\ECDatabaseWinFormsExtension.csprojResolveAssemblyReference.cache
+E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\obj\Release\ECDatabaseWinFormsExtension.csproj.CoreCompileInputs.cache
+E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\obj\Release\ECDatabaseWinFormsExtension.csproj.CopyComplete
+E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\obj\Release\ECDatabaseWinFormsExtension.dll
+E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\obj\Release\ECDatabaseWinFormsExtension.pdb
