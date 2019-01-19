@@ -22,3 +22,4 @@ E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\obj\Release\ConsoleTest.cs
 E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\obj\Release\ConsoleTest.csproj.CopyComplete
 E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\obj\Release\ConsoleTest.exe
 E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\obj\Release\ConsoleTest.pdb
+E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Release\ECDatabaseEngine.xml

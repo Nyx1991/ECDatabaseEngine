@@ -22,3 +22,4 @@ E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Debug\System.Data.SQLi
 E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Debug\System.Data.SQLite.Linq.dll
 E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Debug\EntityFramework.xml
 E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Debug\EntityFramework.SqlServer.xml
+E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Debug\ECDatabaseEngine.xml

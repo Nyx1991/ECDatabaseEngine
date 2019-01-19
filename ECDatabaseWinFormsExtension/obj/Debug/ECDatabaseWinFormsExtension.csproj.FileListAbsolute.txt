@@ -13,3 +13,4 @@ E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\obj\Debug\
 E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\obj\Debug\ECDatabaseWinFormsExtension.csproj.CopyComplete
 E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\obj\Debug\ECDatabaseWinFormsExtension.dll
 E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\obj\Debug\ECDatabaseWinFormsExtension.pdb
+E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\bin\Debug\ECDatabaseEngine.xml
