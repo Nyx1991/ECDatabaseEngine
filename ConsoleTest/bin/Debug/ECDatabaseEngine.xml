@@ -231,16 +231,10 @@
             Important: This can lead to data loss.
             </summary>
         </member>
-        <member name="M:ECDatabaseEngine.ECTable.CopyFrom(ECDatabaseEngine.ECTable)">
+        <member name="M:ECDatabaseEngine.ECTable.CopyFrom(ECDatabaseEngine.ECTable,System.Boolean)">
             <summary>
             Copy the content of all fields from the currently active record of a given tabel
             to the currently active record of this table
-            </summary>
-            <param name="_table">Table from which the data should be copied</param>
-        </member>
-        <member name="M:ECDatabaseEngine.ECTable.CopyFromSilent(ECDatabaseEngine.ECTable)">
-            <summary>
-            Behaves like CopyFrom. Just doesnt invoke the OnChange event
             </summary>
             <param name="_table">Table from which the data should be copied</param>
         </member>

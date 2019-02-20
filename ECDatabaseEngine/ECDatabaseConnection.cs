@@ -16,7 +16,7 @@ namespace ECDatabaseEngine
 
         private static Dictionary<string, string>   parms;
 
-        public static void CreateConnection(string connectionString)
+        public static void              CreateConnection(string connectionString)
         {
             ProcessConnectionString(connectionString);
             switch (parms["driver"])
@@ -34,7 +34,6 @@ namespace ECDatabaseEngine
             }
             Connection.Connect(parms);
         }
-
         public static string            CurrentDatabase => Connection.CurrentDatabase;
         public static string            CurrentUser => Connection.CurrentUser;
 

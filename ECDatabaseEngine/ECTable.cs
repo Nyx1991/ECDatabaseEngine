@@ -22,19 +22,16 @@ namespace ECDatabaseEngine
         private Dictionary<string, string> filter;
         private Dictionary<string, KeyValuePair<string, string>> ranges;
         private List<string> order;
-        
+        private List<ECJoin> joins;
+
         /// <summary>
         /// Determines in which order the records should be loaded.
         /// Use AddOrderBy(_fieldName) to add fields you want the records to be orderd after
         /// </summary>
         public OrderType OrderType { get; set; }
         private string SqlTableName { get => "`" + TableName + "`."; }
-
-        private List<ECJoin> joins;
-
-        static int nextGlobalRecId = 0;
-        int globalRecId = 0;
-        int currentRecord;
+        
+        int currRecIdx;
 
         #region EventHandler
         /// <summary>
@@ -80,7 +77,7 @@ namespace ECDatabaseEngine
         /// <summary>
         /// IEnumerator implementation. Returns the current record.
         /// </summary>
-        public object Current => records[currentRecord];
+        public object Current => records[currRecIdx];
         /// <summary>
         /// Record count.
         /// </summary>
@@ -97,6 +94,11 @@ namespace ECDatabaseEngine
             Init();            
         }
 
+        internal ECTable(Dictionary<string, string> _values) : this()
+        {
+            InitRecordFromDictionary(_values);
+        }
+
         #region Init/Reset/Clear
         /// <summary>
         /// Removes all filters and ranges and unloads all loaded Records. Initializes all Fields.
@@ -108,7 +110,7 @@ namespace ECDatabaseEngine
             else
                 records = new List<ECTable>();
 
-            currentRecord = 0;
+            currRecIdx = 0;
             filter = new Dictionary<string, string>();
             ranges = new Dictionary<string, KeyValuePair<string, string>>();
             joins = new List<ECJoin>();
@@ -142,8 +144,8 @@ namespace ECDatabaseEngine
         public void Reset()
         {
             InvokeMethodeOnJoinedTables("Reset");
-            currentRecord = 0;
-            CopyFromSilent(records[0]);
+            currRecIdx = 0;
+            CopyFrom(records[0], false);
             OnChanged?.Invoke(this, this);
         }
 
@@ -231,23 +233,24 @@ namespace ECDatabaseEngine
         /// <returns>True if a record was found. False if no more record was found</returns>
         public bool Next()
         {
-            if (records.Count == 0)
-                return false;
-            records[currentRecord].CopyFromSilent(this);
             bool ret = false;
             if (records.Count == 0)
-                return false;
-            else if (currentRecord >= records.Count - 1)
+                return ret;
+
+            records[currRecIdx].CopyFrom(this, false); //save the data to the buffer before getting next record
+            
+            if (currRecIdx >= records.Count - 1) //Here we stand at the last record
             {
-                currentRecord = 0;
+                currRecIdx = 0;
                 ret = false;
             }
             else
             {
-                currentRecord++;
+                currRecIdx++;
                 ret = true;
             }
-            CopyFromSilent(records[currentRecord]);
+            records[currRecIdx].CopyFrom(this, false); //save the data to the buffer before getting next record
+            CopyFrom(records[currRecIdx], false);            
             InvokeMethodeOnJoinedTables("Next");
             OnChanged?.Invoke(this, this);
             return ret;
@@ -260,13 +263,14 @@ namespace ECDatabaseEngine
         {
             if (records.Count > 0)
             {
-                currentRecord = records.Count - 1;
+                currRecIdx = records.Count - 1;
             }
             else
             {
-                currentRecord = 0;
+                currRecIdx = 0;
             }
-            CopyFromSilent(records[currentRecord]);
+            records[currRecIdx].CopyFrom(this, false); //save the data to the buffer before getting next record
+            CopyFrom(records[currRecIdx], false);
             InvokeMethodeOnJoinedTables("Last");
             OnChanged?.Invoke(this, this);
         }
@@ -276,8 +280,8 @@ namespace ECDatabaseEngine
         /// </summary>
         public void First()
         {
-            currentRecord = 0;
-            CopyFromSilent(records[currentRecord]);
+            currRecIdx = 0;
+            CopyFrom(records[currRecIdx], false);
             InvokeMethodeOnJoinedTables("First");
             OnChanged?.Invoke(this, this);
         }
@@ -295,7 +299,7 @@ namespace ECDatabaseEngine
         /// Load records from database.
         /// </summary>
         public void FindSet(bool _invokeEvent = true)
-        {
+        {            
             InitTableDataFromDictionaryList(ECDatabaseConnection.Connection.GetData(this, filter, ranges, order));
             if (_invokeEvent)
                 OnChanged?.Invoke(this, this);
@@ -310,6 +314,7 @@ namespace ECDatabaseEngine
         /// <param name="_recId">RecId of the record</param>
         public void Get(int _recId)
         {
+            Init();
             filter = new Dictionary<string, string>();
             filter.Add("RecId", _recId.ToString());
             InitTableDataFromDictionaryList(ECDatabaseConnection.Connection.GetData(this, filter,
@@ -374,8 +379,7 @@ namespace ECDatabaseEngine
         {
             OnBeforeInsert?.Invoke(this, this);
             RecId = ECDatabaseConnection.Connection.Insert(this);
-            Get(RecId);
-            Clear();
+            Get(RecId);            
             OnAfterInsert?.Invoke(this, this);
         }
 
@@ -385,15 +389,24 @@ namespace ECDatabaseEngine
         /// </summary>
         public void Delete()
         {
+            int recIdx;
+
             OnBeforeDelete?.Invoke(this, this);
             if (records.Count == 0)
             {
-                currentRecord = 0;
+                currRecIdx = 0;
                 Init();
             }
             else
             {
+                if (currRecIdx == records.Count - 1)
+                {
+                    currRecIdx--;
+                }
+                recIdx = currRecIdx;
                 ECDatabaseConnection.Connection.Delete(this);
+                FindSet();
+                SetCurrentBufferIndex(recIdx);
                 OnChanged?.Invoke(this, this);
             }
             OnAfterDelete?.Invoke(this, this);           
@@ -421,7 +434,7 @@ namespace ECDatabaseEngine
         {
             OnBeforeModify?.Invoke(this, this);
             ECDatabaseConnection.Connection.Modify(this);
-            records[currentRecord] = this;
+            records[currRecIdx] = this;
             OnAfterModify?.Invoke(this, this);
         }
 
@@ -429,25 +442,32 @@ namespace ECDatabaseEngine
         /// Returns the position of the current record in the loaded dataset
         /// </summary>
         /// <returns>Index of the current record</returns>
-        public int GetRecPos()
+        public int GetCurrentBufferIndex()
         {
-            return currentRecord;
+            return currRecIdx;
         }
 
         /// <summary>
         /// Loads the record at the given position in the dataset
         /// </summary>
         /// <param name="_pos">Index of the record</param>
-        public void SetRecPos(int _pos)
+        public void SetCurrentBufferIndex(int _pos)
         {
+            if (records.Count == 0)
+            {
+                currRecIdx = 0;
+                Init();
+                return;
+            }
+            
             if (_pos > records.Count - 1)
                 throw new IndexOutOfRangeException();
 
-            records[currentRecord].CopyFromSilent(this);
-            currentRecord = _pos;
+            records[currRecIdx].CopyFrom(this, false);
+            currRecIdx = _pos;
 
-            CopyFromSilent(records[currentRecord]);
-            InvokeMethodeOnJoinedTables("SetRecPos", new object[] { _pos });
+            CopyFrom(records[currRecIdx], false);
+            InvokeMethodeOnJoinedTables("SetCurrentBufferIndex", new object[] { _pos });
             OnChanged?.Invoke(this, this);
         }
 
@@ -456,11 +476,26 @@ namespace ECDatabaseEngine
         /// </summary>
         public void ModifyAll()
         {
-            FindSet();
+            int recIdx = currRecIdx;
+            SetCurrentBufferIndex(0);
             do
             {
                 Modify();
             } while (Next());
+
+            FindSet();
+
+            if (records.Count == 0)
+            { 
+                SetCurrentBufferIndex(0);
+                return;
+            }
+
+            if (recIdx > records.Count - 1)
+            {
+                recIdx = records.Count - 1;
+            }
+            SetCurrentBufferIndex(recIdx);
         }
 
         /// <summary>
@@ -480,24 +515,18 @@ namespace ECDatabaseEngine
         /// to the currently active record of this table
         /// </summary>
         /// <param name="_table">Table from which the data should be copied</param>
-        public void CopyFrom(ECTable _table)
-        {
-            CopyFromSilent(_table);
-            OnChanged?.Invoke(this, this);
-        }
-
-        /// <summary>
-        /// Behaves like CopyFrom. Just doesnt invoke the OnChange event
-        /// </summary>
-        /// <param name="_table">Table from which the data should be copied</param>
-        protected void CopyFromSilent(ECTable _table)
+        /// <param name="_invokeOnChangeEvent">True: OnChange Event will be invoked if function is called. False: OnChange Event will not be invoked</param>
+        public void CopyFrom(ECTable _table, bool _invokeOnChangeEvent = true)
         {
             PropertyInfo targetPi;
             foreach (PropertyInfo sourcePi in _table.GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute))))
                 if ((targetPi = GetType().GetProperty(sourcePi.Name)) != null)
                     targetPi.SetValue(this, sourcePi.GetValue(_table));
-            globalRecId = _table.globalRecId;
+
+            if (_invokeOnChangeEvent)
+                OnChanged?.Invoke(this, this);
         }
+
         /// <summary>
         /// Convert a DateTime variable into the SQL date notation.
         /// </summary>
@@ -518,11 +547,7 @@ namespace ECDatabaseEngine
         }
         #endregion
 
-        #region Database helper functions
-        internal ECTable(Dictionary<string, string> _values) : this()
-        {
-            InitRecordFromDictionary(_values);
-        }
+        #region Database helper functions        
 
         internal string GetValueInSqlFormat(PropertyInfo _p)
         {
@@ -619,7 +644,7 @@ namespace ECDatabaseEngine
 
                 case FieldType.INT:
                     if (value == "")
-                        _p.SetValue(this, 0);
+                        _p.SetValue(this, 0);                    
                     else
                         _p.SetValue(this, Convert.ToInt32(value));
                     break;
@@ -664,10 +689,8 @@ namespace ECDatabaseEngine
             foreach (Dictionary<string, string> d in _dataDict)
             {
                 table = (ECTable)Activator.CreateInstance(this.GetType());
-                table.InitRecordFromDictionary(d);
-                table.globalRecId = nextGlobalRecId;
-                records.Add(table);
-                nextGlobalRecId++;
+                table.InitRecordFromDictionary(d);                
+                records.Add(table);                
             }
             foreach (ECJoin j in joins)
             {
@@ -680,8 +703,8 @@ namespace ECDatabaseEngine
             }
             else
             {
-                currentRecord = 0;
-                CopyFromSilent(records.First());
+                currRecIdx = 0;
+                CopyFrom(records.First(), false);
             }
         }
 
@@ -927,6 +950,16 @@ namespace ECDatabaseEngine
 
         #endregion
 
+        private void InvokeMethodeOnJoinedTables(string _method, object[] _params = null)
+        {
+            if (_params == null)
+                _params = new object[] { };
+            foreach (ECJoin j in joins)
+            {
+                ((ECTable)j.Table).GetType().GetMethod(_method).Invoke(j.Table, _params);
+            }
+        }
+
         #region Interface
         /// <summary>
         /// IEquatable implementation.
@@ -934,8 +967,24 @@ namespace ECDatabaseEngine
         /// <param name="_other">Table to which this table should be compared to.</param>
         /// <returns>True: if both RecIds are the same. False: If not so.</returns>
         public bool Equals(ECTable _other)
-        {
-            return (globalRecId == _other.globalRecId);
+        {            
+            if (this.GetType() != _other.GetType())
+                return false;
+
+            foreach (PropertyInfo p in this.GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute))))
+            {
+                if (!_other.GetType().GetProperties().Contains(p))
+                    return false;
+
+                Console.WriteLine(p.GetValue(this));
+                Console.WriteLine(p.GetValue(_other));
+
+                if (!p.GetValue(this).Equals(p.GetValue(_other)))
+                    return false;
+                
+            }
+
+            return true;
         }
         /// <summary>
         /// IEnumerator implementation.
@@ -960,15 +1009,6 @@ namespace ECDatabaseEngine
             return ret.Substring(0, ret.Length - 2);
         }
         #endregion
-
-        private void InvokeMethodeOnJoinedTables(string _method, object[] _params = null)
-        {
-            if (_params == null)
-                _params = new object[] { };
-            foreach (ECJoin j in joins)
-            {
-                ((ECTable)j.Table).GetType().GetMethod(_method).Invoke(j.Table, _params);
-            }
-        }
+        
     }
 }

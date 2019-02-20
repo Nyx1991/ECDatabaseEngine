@@ -21,16 +21,14 @@ namespace ConsoleTest
                     AppRessource.pass
                 );
             */
-            string connectionString = String.Format("driver=sqlite;dbPath=C:\\temp\\test.db3");
+            string connectionString = String.Format(@"driver=sqlite;dbPath=C:\temp\test.db3");
 
             ECDatabaseConnection.CreateConnection(connectionString);
 
             Person p = new Person();
             Address a = new Address();
 
-            p.FindSet();
-
-            Console.WriteLine(ECDatabaseConnection.IsConnected);                        
+            Console.WriteLine(ECDatabaseConnection.IsConnected);
 
             ECDatabaseConnection.Disconnect();            
             Console.ReadKey();

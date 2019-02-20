@@ -148,7 +148,7 @@ namespace ECDatabaseEngine
             using (MySqlDataReader res = cmd.ExecuteReader())
             {
                 res.Read();
-                return res.GetInt32("RecId");
+                return res.GetInt32(nameof(_table.RecId));
             }
         }
 

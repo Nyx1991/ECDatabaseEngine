@@ -34,7 +34,7 @@ namespace ECDatabaseWinFormsExtension
             do
             {
                 int index = _comboBox.Items.Add(p.GetValue(_table));
-                indexRecIdMap.Add(index, _table.RecId);
+                indexRecIdMap.Add(index, _table.GetCurrentBufferIndex());
             } while (_table.Next());
             comboBoxRecIdMap.Add(_comboBox, indexRecIdMap);
 
@@ -47,7 +47,7 @@ namespace ECDatabaseWinFormsExtension
         public static void GetSelectedRecord(this ComboBox _comboBox, ECTable _table)
         {            
             _table.Clear();
-            _table.Get(comboBoxRecIdMap[_comboBox][_comboBox.SelectedIndex]);
+            _table.SetCurrentBufferIndex(comboBoxRecIdMap[_comboBox][_comboBox.SelectedIndex]);                
         }
     }
 }

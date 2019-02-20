@@ -13,7 +13,7 @@ namespace ECDatabaseEngine
         string  CurrentUser { get; }
 
         bool Connect(Dictionary<string, string> _params);
-        void Disconnect();        
+        void Disconnect();
         int Insert(ECTable _table);
         void Delete(ECTable _table);
         void Modify(ECTable _table);

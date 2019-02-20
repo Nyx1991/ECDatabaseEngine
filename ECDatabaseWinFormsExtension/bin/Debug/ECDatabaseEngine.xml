@@ -208,13 +208,13 @@
             Has no impact on joined tables.
             </summary>
         </member>
-        <member name="M:ECDatabaseEngine.ECTable.GetRecPos">
+        <member name="M:ECDatabaseEngine.ECTable.GetCurrentBufferIndex">
             <summary>
             Returns the position of the current record in the loaded dataset
             </summary>
             <returns>Index of the current record</returns>
         </member>
-        <member name="M:ECDatabaseEngine.ECTable.SetRecPos(System.Int32)">
+        <member name="M:ECDatabaseEngine.ECTable.SetCurrentBufferIndex(System.Int32)">
             <summary>
             Loads the record at the given position in the dataset
             </summary>
@@ -231,18 +231,13 @@
             Important: This can lead to data loss.
             </summary>
         </member>
-        <member name="M:ECDatabaseEngine.ECTable.CopyFrom(ECDatabaseEngine.ECTable)">
+        <member name="M:ECDatabaseEngine.ECTable.CopyFrom(ECDatabaseEngine.ECTable,System.Boolean)">
             <summary>
             Copy the content of all fields from the currently active record of a given tabel
             to the currently active record of this table
             </summary>
             <param name="_table">Table from which the data should be copied</param>
-        </member>
-        <member name="M:ECDatabaseEngine.ECTable.CopyFromSilent(ECDatabaseEngine.ECTable)">
-            <summary>
-            Behaves like CopyFrom. Just doesnt invoke the OnChange event
-            </summary>
-            <param name="_table">Table from which the data should be copied</param>
+            <param name="_invokeOnChangeEvent">True: OnChange Event will be invoked if function is called. False: OnChange Event will not be invoked</param>
         </member>
         <member name="M:ECDatabaseEngine.ECTable.DateTimeToSqlDate(System.DateTime)">
             <summary>

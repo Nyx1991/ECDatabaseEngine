@@ -215,8 +215,8 @@ namespace ECDatabaseEngine
             command.CommandText = sql;
             using (SQLiteDataReader r = command.ExecuteReader())
             {
-                r.Read();
-                return Convert.ToInt32(r["RecId"]);
+                r.Read();                 
+                return r.GetInt32(r.GetOrdinal(nameof(_table.RecId)));
             }
         }
 
