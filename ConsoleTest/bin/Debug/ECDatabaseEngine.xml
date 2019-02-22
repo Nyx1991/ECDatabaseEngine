@@ -9,12 +9,6 @@
             Abstract table class. Use this class as a base for your tables.
             </summary>
         </member>
-        <member name="F:ECDatabaseEngine.ECTable.records">
-            <summary>
-            Internal list which is used to store all loaded records.
-            The records are stored as ECTable instances itself.
-            </summary>
-        </member>
         <member name="P:ECDatabaseEngine.ECTable.OrderType">
             <summary>
             Determines in which order the records should be loaded.
@@ -208,13 +202,13 @@
             Has no impact on joined tables.
             </summary>
         </member>
-        <member name="M:ECDatabaseEngine.ECTable.GetRecPos">
+        <member name="M:ECDatabaseEngine.ECTable.GetCurrentBufferIndex">
             <summary>
             Returns the position of the current record in the loaded dataset
             </summary>
             <returns>Index of the current record</returns>
         </member>
-        <member name="M:ECDatabaseEngine.ECTable.SetRecPos(System.Int32)">
+        <member name="M:ECDatabaseEngine.ECTable.SetCurrentBufferIndex(System.Int32)">
             <summary>
             Loads the record at the given position in the dataset
             </summary>
@@ -237,6 +231,7 @@
             to the currently active record of this table
             </summary>
             <param name="_table">Table from which the data should be copied</param>
+            <param name="_invokeOnChangeEvent">True: OnChange Event will be invoked if function is called. False: OnChange Event will not be invoked</param>
         </member>
         <member name="M:ECDatabaseEngine.ECTable.DateTimeToSqlDate(System.DateTime)">
             <summary>

@@ -9,12 +9,6 @@
             Abstract table class. Use this class as a base for your tables.
             </summary>
         </member>
-        <member name="F:ECDatabaseEngine.ECTable.records">
-            <summary>
-            Internal list which is used to store all loaded records.
-            The records are stored as ECTable instances itself.
-            </summary>
-        </member>
         <member name="P:ECDatabaseEngine.ECTable.OrderType">
             <summary>
             Determines in which order the records should be loaded.

@@ -14,15 +14,19 @@ namespace ECDatabaseEngine
     /// </summary>
     public abstract class ECTable : IEnumerator, IEnumerable, IEquatable<ECTable>
     {
-        /// <summary>
-        /// Internal list which is used to store all loaded records.
-        /// The records are stored as ECTable instances itself.
-        /// </summary>
-        protected List<ECTable> records;
+        
+        private List<ECTable> records;
         private Dictionary<string, string> filter;
         private Dictionary<string, KeyValuePair<string, string>> ranges;
         private List<string> order;
         private List<ECJoin> joins;
+
+        internal List<ECTable> Records => records;
+        internal Dictionary<string, string> Filter => filter;
+        internal Dictionary<string, KeyValuePair<string, string>> Ranges => ranges;
+        internal List<string> Order => order;
+        internal List<ECJoin> Joins => joins;
+
 
         /// <summary>
         /// Determines in which order the records should be loaded.
@@ -249,7 +253,7 @@ namespace ECDatabaseEngine
                 currRecIdx++;
                 ret = true;
             }
-            records[currRecIdx].CopyFrom(this, false); //save the data to the buffer before getting next record
+            
             CopyFrom(records[currRecIdx], false);            
             InvokeMethodeOnJoinedTables("Next");
             OnChanged?.Invoke(this, this);
@@ -536,6 +540,7 @@ namespace ECDatabaseEngine
         {
             return String.Format("{0}-{1}-{2}", _dt.Year, _dt.Month, _dt.Day);
         }
+
         /// <summary>
         /// Convert a DateTime variable into the SQL date-time notation.
         /// </summary>
@@ -547,7 +552,7 @@ namespace ECDatabaseEngine
         }
         #endregion
 
-        #region Database helper functions        
+        #region Database helper functions
 
         internal string GetValueInSqlFormat(PropertyInfo _p)
         {
@@ -706,246 +711,6 @@ namespace ECDatabaseEngine
                 currRecIdx = 0;
                 CopyFrom(records.First(), false);
             }
-        }
-
-        internal void GetParameterizedWhereClause(ref List<string> _where, ref Dictionary<string, string> _parameters)
-        {            
-            foreach (KeyValuePair<string, KeyValuePair<string, string>> kp in ranges)
-                if (kp.Value.Value.Equals(""))
-                {
-                    string keyParm = TableName + kp.Key;
-                    _parameters.Add(keyParm, kp.Value.Key);
-                    _where.Add(SqlTableName + kp.Key + "=@" + keyParm);
-                }
-                else
-                {
-                    string keyParm = TableName + kp.Key;
-                    _parameters.Add("K" + keyParm, kp.Value.Key);
-                    _parameters.Add("V" + keyParm, kp.Value.Value);
-                    _where.Add("(" + SqlTableName + kp.Key + " BETWEEN @K" + keyParm + " AND @V" + keyParm + ")");
-                }
-
-            foreach (KeyValuePair<string, string> kp in filter)
-            {
-                _where.Add(ParseFilterString(kp.Key, kp.Value, ref _parameters));
-            }
-
-            foreach (ECJoin j in joins)
-            {
-                ECTable joinTable = (ECTable)j.Table;
-                joinTable.GetParameterizedWhereClause(ref _where, ref _parameters);
-            }
-        }
-
-        internal string GetOrderByClause()
-        {
-            string ret = "";
-
-            foreach (string s in order)
-                ret += SqlTableName + s + ",";
-
-            foreach (ECJoin j in joins)
-            { 
-                ECTable joinTable = (ECTable)j.Table;
-                ret += joinTable.GetOrderByClause() + ",";
-            }            
-            if (ret.Length > 0)
-                return ret.Substring(0, ret.Length - 1);
-            else
-                return ret;
-        }
-
-        internal string ParseFilterString(string _fieldName, string _filter, ref Dictionary<string, string> _parameter)
-        {
-            string fieldName = "`" + _fieldName + "`";
-            string[] val = { "", "" };
-            int valId = 0;
-            bool foundPoint = false;
-            string clause = "("+fieldName;
-            string operators = "<>=";
-            for(int i=0; i<_filter.Length; i++)
-            {
-                switch (_filter[i])
-                {
-                    case '<':
-                        if (!foundPoint)
-                            clause += '<';
-                        else
-                        {
-                            clause += ProcessFromToOperator(i, val[valId % 2], val[valId + 1 % 2],
-                                                _filter[i - 1], ref _parameter);
-                            foundPoint = false;
-                            val[valId + 1 % 2] = "";
-                        }
-                        break;
-                    case '>':
-                        if (!foundPoint)
-                            clause += '>';
-                        else
-                        {
-                            clause += ProcessFromToOperator(i, val[valId % 2], val[valId + 1 % 2],
-                                                _filter[i - 1], ref _parameter);
-                            foundPoint = false;
-                            val[valId + 1 % 2] = "";
-                        }
-                        break;
-                    case '=':
-                        if (!foundPoint)
-                            clause += '=';
-                        else
-                        {
-                            clause += ProcessFromToOperator(i, val[valId % 2], val[valId + 1 % 2],
-                                                _filter[i - 1], ref _parameter);
-                            foundPoint = false;
-                            val[valId + 1 % 2] = "";
-                        }
-                        break;
-                    case '|':
-                        if (!foundPoint)
-                        {
-                            if (!operators.Contains(clause.Last()))
-                                clause += "=";
-                            clause += "@F" + TableName + i + " OR " + fieldName;
-                            _parameter.Add("F" + TableName + i, val[valId % 2]);                            
-                        }
-                        else
-                        {
-                            clause += ProcessFromToOperator(i, val[valId % 2], val[valId + 1 % 2],
-                                                _filter[i - 1], ref _parameter);
-                            foundPoint = false;
-                            val[valId + 1 % 2] = "";
-                        }
-                        val[valId % 2] = "";
-                        break;
-                    case '&':
-                        if (!foundPoint)
-                        {
-                            if (!operators.Contains(clause.Last()))
-                                clause += "=";
-                            clause += "@F" + TableName + i + " AND " + fieldName;
-                            _parameter.Add("F" + i, val[valId % 2]);
-                        }
-                        else
-                        {
-                            clause += ProcessFromToOperator(i, val[valId % 2], val[valId + 1 % 2],
-                                                _filter[i - 1], ref _parameter);
-                            foundPoint = false;
-                            val[valId+1 % 2] = "";
-                        }
-                        val[valId % 2] = "";
-                        break;
-                    case '.':
-                        if (foundPoint) //found second . => switch to second value storage
-                            valId++;
-                        else //found first . => remember for next loop (we're now in another State)
-                            foundPoint = true;
-                        break;
-                    default:
-                        val[valId % 2] += _filter[i];                        
-                        break;
-                }
-            }
-
-            if (foundPoint) // we're at the end of the line and still havent processed the .'s. That Means we have sth. like "1..5" or "1.." or "..5"
-            {
-                clause += ProcessFromToOperator(_filter.Length, val[valId % 2], val[(valId+1) % 2], 
-                                                _filter[_filter.Length-1], ref _parameter);
-            }
-            else
-            {
-                if (!operators.Contains(clause.Last()))
-                    clause += "=";
-                clause += "@F"+ TableName + _filter.Length;
-                _parameter.Add("F"+ TableName + _filter.Length, val[valId % 2]);
-            }
-
-            return clause+")";
-        }
-
-        private string ProcessFromToOperator(int id, string currVal, string lastVal, char lastChar, ref Dictionary<string, string> _parameter)
-        {
-            string clause="";
-
-            if (lastVal == "" || currVal == "")
-            {
-                if (lastChar == '.') //case: "1.."
-                { 
-                    clause += ">=";
-                    _parameter.Add("F"+ TableName + id, lastVal);
-                }
-                else //case: "..5"
-                { 
-                    clause += "<=";
-                    _parameter.Add("F" + TableName + id, currVal);
-                }
-                clause += "@F" + id;                
-            }
-            else //case: "1..5"
-            {
-                clause += " BETWEEN ";
-                clause += "@F" + TableName + (id - 1);
-                clause += " AND ";
-                clause += "@F" + TableName + id;
-
-                _parameter.Add("F" + TableName + (id - 1), lastVal);
-                _parameter.Add("F" + TableName + id, currVal);
-            }
-
-            return clause;
-        }
-
-        internal string MakeSelectFrom(bool _isRootTable=false)
-        {
-            string sqlTableName = "`" + TableName + "`.";
-            string ret;
-            if (_isRootTable)
-                ret = "SELECT ";
-            else
-                ret = "";
-
-            foreach (PropertyInfo p in GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute))))
-            {
-                ret += sqlTableName + p.Name + " AS '" + TableName + "." + p.Name + "',";
-            }            
-            foreach(ECJoin j in joins)
-            {
-                ret += ((ECTable)j.Table).MakeSelectFrom()+",";
-            }
-            ret = ret.Substring(0, ret.Length - 1);
-
-            if(_isRootTable)
-                ret += " FROM "+ "`" + TableName + "`";
-
-            return ret;
-        }
-
-        internal string MakeJoins()
-        {
-            string ret = "";
-
-            foreach(ECJoin j in joins)
-            {
-                ECTable joinTable = ((ECTable)j.Table);
-                switch (j.JoinType)
-                {
-                    case ECJoinType.Inner:
-                        ret += " INNER JOIN ";
-                        break;
-                    case ECJoinType.LeftOuter:
-                        ret += " LEFT OUTER JOIN ";
-                        break;
-                    case ECJoinType.RightOuter:
-                        ret += " RIGHT OUTER JOIN ";
-                        break;
-                }
-                if (j.OnTargetField != null)
-                    ret += "`"+joinTable.TableName+"` ON "+"`"+joinTable.TableName+"`."+j.OnTargetField + "=`"+TableName+"`."+j.OnSourceField;
-                else
-                    ret += "`" + joinTable.TableName + "` ON " + "`" + joinTable.TableName + "`.RecId=`" + TableName + "`." + j.OnSourceField;
-                ret += joinTable.MakeJoins();
-            }
-
-            return ret;
         }
 
         #endregion

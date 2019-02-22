@@ -16,6 +16,7 @@ namespace ECDatabaseEngine
         public string CurrentDatabase => currentDatabase;
         public string CurrentUser => currentUser;
 
+        public ECSqlStatementBuilderBase SqlBuilder => ECSqlStatementBuilderSqLite.Instance;
 
         private bool isConnected;
         private string currentDatabase;
@@ -42,7 +43,7 @@ namespace ECDatabaseEngine
         {
             connection = new SQLiteConnection("Data Source=" + _params["dbpath"]);
             if (_params.Keys.Contains("pass"))
-                connection.SetPassword(_params["pass"]);
+                connection?.ChangePassword(_params["pass"]);                
             connection.Open();                
             command = new SQLiteCommand(connection);
             currentDatabase = fi.Name;
@@ -132,36 +133,15 @@ namespace ECDatabaseEngine
 
         public List<Dictionary<string, string>> GetData(ECTable _table, Dictionary<string, string> _filter, Dictionary<string, KeyValuePair<string, string>> _ranges, List<string> _order)
         {
-            Type t = _table.GetType();
-            List<string> where = new List<string>();
+            Type t = _table.GetType();            
             Dictionary<string, string> parms = new Dictionary<string, string>();
-            //Select From
-            string sql = _table.MakeSelectFrom(true);
 
-            //Joins
-            sql += _table.MakeJoins();
+            string sql = SqlBuilder.GenerateSqlForECTableWithPreparedStatements(_table, ref parms);
 
-            //Where
             command.Parameters.Clear();
-            _table.GetParameterizedWhereClause(ref where, ref parms);
-
             foreach (KeyValuePair<string, string> kv in parms)
                 command.Parameters.AddWithValue(kv.Key, kv.Value);
-            if (where.Count != 0)
-            {
-                sql += " WHERE ";
-                foreach (string s in where)
-                    sql += "(" + s + ") AND";
-                sql = sql.Substring(0, sql.Length - 4);
-            }
-
-            //Order By
-            string orderClause = _table.GetOrderByClause();
-            if (orderClause.Length > 1)
-                sql += " ORDER BY " + orderClause + " " + _table.OrderType.ToString();
-
-            sql += ";";
-
+           
             command.CommandText = sql;
             command.Prepare();
             return (ExecuteSql());
@@ -352,9 +332,5 @@ namespace ECDatabaseEngine
             res.Close();
         }
 
-        public void SetPassword(string _password)
-        {
-            connection?.ChangePassword(_password);
-        }
     }
 }

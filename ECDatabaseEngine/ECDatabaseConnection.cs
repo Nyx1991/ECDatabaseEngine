@@ -16,7 +16,11 @@ namespace ECDatabaseEngine
 
         private static Dictionary<string, string>   parms;
 
-        public static void              CreateConnection(string connectionString)
+        
+        public static string            CurrentDatabase => Connection.CurrentDatabase;
+        public static string            CurrentUser => Connection.CurrentUser;
+
+        public static void Connect(string connectionString)
         {
             ProcessConnectionString(connectionString);
             switch (parms["driver"])
@@ -34,8 +38,6 @@ namespace ECDatabaseEngine
             }
             Connection.Connect(parms);
         }
-        public static string            CurrentDatabase => Connection.CurrentDatabase;
-        public static string            CurrentUser => Connection.CurrentUser;
 
         public static void Disconnect()
         {
@@ -66,16 +68,16 @@ namespace ECDatabaseEngine
             }
         }        
 
-        public static void SetPassword(string _pass)
-        {
-            if (!Connection.IsConnected)
-                throw new Exception("Not connected to the database");
+        //public static void SetPassword(string _pass)
+        //{
+        //    if (!Connection.IsConnected)
+        //        throw new Exception("Not connected to the database");
 
-            Connection.SetPassword(_pass);
-            if (!parms.Keys.Contains("pass"))
-                parms.Add("pass", _pass);
-            Connection.Disconnect();
-            Connection.Connect(parms);
-        }
+        //    Connection.SetPassword(_pass);
+        //    if (!parms.Keys.Contains("pass"))
+        //        parms.Add("pass", _pass);
+        //    Connection.Disconnect();
+        //    Connection.Connect(parms);
+        //}
     }
 }

@@ -14,6 +14,7 @@ namespace ECDatabaseEngine
         public bool IsConnected => isConnected;
         public string CurrentDatabase => currentDatabase;
         public string CurrentUser => currentUser;
+        public ECSqlStatementBuilderBase SqlBuilder => ECSqlStatementBuilderMySQL.Instance;
 
 
         private bool isConnected;
@@ -63,35 +64,14 @@ namespace ECDatabaseEngine
             command = new MySqlCommand();
             command.Connection = connection;
 
-            Type t = _table.GetType();
-            List<string> where = new List<string>();
+            Type t = _table.GetType();            
             Dictionary<string, string> parms = new Dictionary<string, string>();
-            //Select From
-            string sql = _table.MakeSelectFrom(true);
-
-            //Joins
-            sql += _table.MakeJoins();
-
-            //Where
-            command.Parameters.Clear();
-            _table.GetParameterizedWhereClause(ref where, ref parms);
-
+            string sql = SqlBuilder.GenerateSqlForECTableWithPreparedStatements(_table, ref parms);
+            
+            command.Parameters.Clear();            
             foreach (KeyValuePair<string, string> kv in parms)
-                command.Parameters.AddWithValue(kv.Key, kv.Value);
-            if (where.Count != 0)
-            {
-                sql += " WHERE ";
-                foreach (string s in where)
-                    sql += "(" + s + ") AND";
-                sql = sql.Substring(0, sql.Length - 4);
-            }
+                command.Parameters.AddWithValue(kv.Key, kv.Value);          
 
-            //Order By
-            string orderClause = _table.GetOrderByClause();
-            if (orderClause.Length > 0)
-                sql += " ORDER BY "+ orderClause + " " + _table.OrderType.ToString();
-
-            sql += ";";
             command.CommandText = sql;
             command.Prepare();
 

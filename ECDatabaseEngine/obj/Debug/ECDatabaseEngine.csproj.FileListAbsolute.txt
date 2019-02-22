@@ -2,7 +2,6 @@ E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\ECDatabaseE
 E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\ECDatabaseEngine.pdb
 E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\MySql.Data.dll
 E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\MySql.Data.xml
-E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\obj\Debug\ECDatabaseEngine.csprojResolveAssemblyReference.cache
 E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\obj\Debug\ECDatabaseEngine.csproj.CoreCompileInputs.cache
 E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\obj\Debug\ECDatabaseEngine.csproj.CopyComplete
 E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\obj\Debug\ECDatabaseEngine.dll

@@ -65,7 +65,9 @@
     <Compile Include="Attributes.cs" />
     <Compile Include="DatabaseImplementations\ECSqlStatementBuilderBase.cs" />
     <Compile Include="DatabaseImplementations\MySQL\ECMySQLConnection.cs" />
+    <Compile Include="DatabaseImplementations\MySQL\ECSqlStatementBuilderMySQL.cs" />
     <Compile Include="DatabaseImplementations\SQLite\ECSqLiteConnection.cs" />
+    <Compile Include="DatabaseImplementations\SQLite\ECSqlStatementBuilderSqLite.cs" />
     <Compile Include="ECDatabaseConnection.cs" />
     <Compile Include="ECExceptions.cs" />
     <Compile Include="ECTable.cs" />
