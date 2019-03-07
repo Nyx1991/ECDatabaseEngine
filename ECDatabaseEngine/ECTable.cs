@@ -67,6 +67,15 @@ namespace ECDatabaseEngine
         /// Can be used to keep UI up to date, for example.
         /// </summary>
         public EventHandler<ECTable> OnChanged;
+        /// <summary>
+        /// Invoked before the FindSet-Method has been called. Can be used to determine if the whole data in the table will be changed.
+        /// </summary>
+        public EventHandler<ECTable> OnBeforeFindSet;
+        /// <summary>
+        /// Invoked after the FindSet-Method has been called. Can be used to determine if the whole data in the table has changed.
+        /// </summary>
+        public EventHandler<ECTable> OnAfterFindSet;
+
         #endregion
 
         /// <summary>
@@ -234,14 +243,13 @@ namespace ECDatabaseEngine
         /// <summary>
         /// Get the next record
         /// </summary>
+        /// <param name="_invokeEvents">False: Events will not be invoked. Default: True</param>
         /// <returns>True if a record was found. False if no more record was found</returns>
-        public bool Next()
+        public bool Next(bool _invokeEvents = true)
         {
             bool ret = false;
             if (records.Count == 0)
-                return ret;
-
-            records[currRecIdx].CopyFrom(this, false); //save the data to the buffer before getting next record
+                return ret;            
             
             if (currRecIdx >= records.Count - 1) //Here we stand at the last record
             {
@@ -256,7 +264,10 @@ namespace ECDatabaseEngine
             
             CopyFrom(records[currRecIdx], false);            
             InvokeMethodeOnJoinedTables("Next");
-            OnChanged?.Invoke(this, this);
+            if (_invokeEvents)
+            { 
+                OnChanged?.Invoke(this, this);
+            }
             return ret;
         }
 
@@ -272,8 +283,7 @@ namespace ECDatabaseEngine
             else
             {
                 currRecIdx = 0;
-            }
-            records[currRecIdx].CopyFrom(this, false); //save the data to the buffer before getting next record
+            }            
             CopyFrom(records[currRecIdx], false);
             InvokeMethodeOnJoinedTables("Last");
             OnChanged?.Invoke(this, this);
@@ -302,11 +312,21 @@ namespace ECDatabaseEngine
         /// <summary>
         /// Load records from database.
         /// </summary>
-        public void FindSet(bool _invokeEvent = true)
-        {            
+        /// <param name="_invokeEvents">False: Events will not be invoked. Default: True</param>
+        public void FindSet(bool _invokeEvents = true)
+        {   
+            if (_invokeEvents)
+            {
+                OnBeforeFindSet?.Invoke(this, this);
+            }
+
             InitTableDataFromDictionaryList(ECDatabaseConnection.Connection.GetData(this, filter, ranges, order));
-            if (_invokeEvent)
+
+            if (_invokeEvents)
+            { 
                 OnChanged?.Invoke(this, this);
+                OnAfterFindSet?.Invoke(this, this);
+            }
         }
 
         #endregion
@@ -438,7 +458,7 @@ namespace ECDatabaseEngine
         {
             OnBeforeModify?.Invoke(this, this);
             ECDatabaseConnection.Connection.Modify(this);
-            records[currRecIdx] = this;
+            records[currRecIdx].CopyFrom(this);
             OnAfterModify?.Invoke(this, this);
         }
 
@@ -473,33 +493,6 @@ namespace ECDatabaseEngine
             CopyFrom(records[currRecIdx], false);
             InvokeMethodeOnJoinedTables("SetCurrentBufferIndex", new object[] { _pos });
             OnChanged?.Invoke(this, this);
-        }
-
-        /// <summary>
-        /// Writes all records to the database
-        /// </summary>
-        public void ModifyAll()
-        {
-            int recIdx = currRecIdx;
-            SetCurrentBufferIndex(0);
-            do
-            {
-                Modify();
-            } while (Next());
-
-            FindSet();
-
-            if (records.Count == 0)
-            { 
-                SetCurrentBufferIndex(0);
-                return;
-            }
-
-            if (recIdx > records.Count - 1)
-            {
-                recIdx = records.Count - 1;
-            }
-            SetCurrentBufferIndex(recIdx);
         }
 
         /// <summary>
@@ -718,7 +711,7 @@ namespace ECDatabaseEngine
         private void InvokeMethodeOnJoinedTables(string _method, object[] _params = null)
         {
             if (_params == null)
-                _params = new object[] { };
+                _params = new object[] { true };
             foreach (ECJoin j in joins)
             {
                 ((ECTable)j.Table).GetType().GetMethod(_method).Invoke(j.Table, _params);

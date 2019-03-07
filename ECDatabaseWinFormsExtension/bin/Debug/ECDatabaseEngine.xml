@@ -51,6 +51,16 @@
             Can be used to keep UI up to date, for example.
             </summary>
         </member>
+        <member name="F:ECDatabaseEngine.ECTable.OnBeforeFindSet">
+            <summary>
+            Invoked before the FindSet-Method has been called. Can be used to determine if the whole data in the table will be changed.
+            </summary>
+        </member>
+        <member name="F:ECDatabaseEngine.ECTable.OnAfterFindSet">
+            <summary>
+            Invoked after the FindSet-Method has been called. Can be used to determine if the whole data in the table has changed.
+            </summary>
+        </member>
         <member name="P:ECDatabaseEngine.ECTable.RecId">
             <summary>
             Ongoing primary key of the table.
@@ -125,10 +135,11 @@
             In the other table it will be the RecId. (Join someTable ON thisTable.SourceField=_table.TargetField)</param>
             <param name="_joinType">INNER, LEFT OUTER or RIGHT OUTER</param>
         </member>
-        <member name="M:ECDatabaseEngine.ECTable.Next">
+        <member name="M:ECDatabaseEngine.ECTable.Next(System.Boolean)">
             <summary>
             Get the next record
             </summary>
+            <param name="_invokeEvents">False: Events will not be invoked. Default: True</param>
             <returns>True if a record was found. False if no more record was found</returns>
         </member>
         <member name="M:ECDatabaseEngine.ECTable.Last">
@@ -151,6 +162,7 @@
             <summary>
             Load records from database.
             </summary>
+            <param name="_invokeEvents">False: Events will not be invoked. Default: True</param>
         </member>
         <member name="M:ECDatabaseEngine.ECTable.Get(System.Int32)">
             <summary>
@@ -213,11 +225,6 @@
             Loads the record at the given position in the dataset
             </summary>
             <param name="_pos">Index of the record</param>
-        </member>
-        <member name="M:ECDatabaseEngine.ECTable.ModifyAll">
-            <summary>
-            Writes all records to the database
-            </summary>
         </member>
         <member name="M:ECDatabaseEngine.ECTable.SynchronizeSchema">
             <summary>

@@ -41,7 +41,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ListBoxExtension.cs" />
     <Compile Include="DataGridViewExtension.cs" />
+    <Compile Include="ECExceptionsExtension.cs" />
     <Compile Include="ECTableExtension.cs" />
     <Compile Include="ComboBoxExtension.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -20,8 +20,7 @@ namespace ECDatabaseEngine
 
         private bool isConnected;
         private string currentDatabase;
-        private string currentUser;
-       
+        private string currentUser;       
 
         public bool Connect(Dictionary<string, string> _params)
         {
@@ -38,24 +37,25 @@ namespace ECDatabaseEngine
                     f.Flush();
                     f.Close();
                 }
+            try
+            {
+                connection = new SQLiteConnection("Data Source=" + _params["dbpath"]);
 
-        try
-        {
-            connection = new SQLiteConnection("Data Source=" + _params["dbpath"]);
-            if (_params.Keys.Contains("pass"))
-                connection?.ChangePassword(_params["pass"]);                
-            connection.Open();                
-            command = new SQLiteCommand(connection);
-            currentDatabase = fi.Name;
-            currentUser = "";
-            isConnected = true;                
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e.StackTrace);
-            isConnected = false;
-            return false;
-        }
+                if (_params.Keys.Contains("pass"))
+                    connection?.SetPassword(_params["pass"]);
+                connection.Open();                
+            
+                command = new SQLiteCommand(connection);
+                currentDatabase = fi.Name;
+                currentUser = "";
+                isConnected = true;                
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.StackTrace);
+                isConnected = false;
+                return false;
+            }
             return true;
         }
 
@@ -135,8 +135,9 @@ namespace ECDatabaseEngine
         {
             Type t = _table.GetType();            
             Dictionary<string, string> parms = new Dictionary<string, string>();
-
+            command = new SQLiteCommand(connection);
             string sql = SqlBuilder.GenerateSqlForECTableWithPreparedStatements(_table, ref parms);
+
 
             command.Parameters.Clear();
             foreach (KeyValuePair<string, string> kv in parms)

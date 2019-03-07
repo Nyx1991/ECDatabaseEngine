@@ -28,7 +28,7 @@ namespace ECDatabaseWinFormsExtension
             }
             
             if (_table.Count == 0)
-                _table.FindSet();
+                _table.FindSet(false);
             do
             {
                 row = new DataGridViewRow();
@@ -41,7 +41,7 @@ namespace ECDatabaseWinFormsExtension
                 }
                 _dgv.Rows.Add(row);
             }
-            while(_table.Next());
+            while(_table.Next(false));
             
             if (_ff == FieldFilter.HideGivenFields)
             {

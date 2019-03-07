@@ -19,3 +19,4 @@ E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\EntityFrame
 E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\System.Data.SQLite.xml
 E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\System.Data.SQLite.dll.config
 E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\ECDatabaseEngine.xml
+E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\obj\Debug\ECDatabaseEngine.csprojResolveAssemblyReference.cache

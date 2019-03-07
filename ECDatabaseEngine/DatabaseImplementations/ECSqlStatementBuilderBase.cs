@@ -110,6 +110,7 @@ namespace ECDatabaseEngine
         virtual protected string CreateOrderByClause(ECTable _table, bool _isRootTable = false)
         {
             string order = "";
+            string orderJ = "";
 
             foreach (string s in _table.Order)
                 order += GetSqlTableName(_table) + s + ",";
@@ -117,16 +118,19 @@ namespace ECDatabaseEngine
             foreach (ECJoin j in _table.Joins)
             {
                 ECTable joinTable = (ECTable)j.Table;
-                order += CreateOrderByClause(joinTable) + ",";
+                orderJ = CreateOrderByClause(joinTable);
+                if (orderJ != "")
+                {
+                    order += orderJ +",";
+                }                
             }
-            if (order.Length > 2)
-            { 
-                return " ORDER BY " + order.Substring(0, order.Length - 2) + " " + _table.OrderType.ToString();
+
+            if (_isRootTable && order.Length > 1)
+            {
+                return " ORDER BY " + order.Substring(0, order.Length - 1) + " " + _table.OrderType.ToString()+";";
             }
             else
-            {
-                return _isRootTable ? ";" : "";                
-            }
+                return _isRootTable ? ";" : "";            
         }
 
         virtual protected string MakeJoins(ECTable _table)
