@@ -36,6 +36,7 @@ namespace ECDatabaseEngine
         private string SqlTableName { get => "`" + TableName + "`."; }
         
         int currRecIdx;
+        int currRecIdxEnumerator;
 
         #region EventHandler
         /// <summary>
@@ -86,11 +87,7 @@ namespace ECDatabaseEngine
         [NotNull]
         [PrimaryKey]
         [AutoIncrement]        
-        public int RecId { get; internal set; }
-        /// <summary>
-        /// IEnumerator implementation. Returns the current record.
-        /// </summary>
-        public object Current => records[currRecIdx];
+        public int RecId { get; internal set; }        
         /// <summary>
         /// Record count.
         /// </summary>
@@ -124,6 +121,7 @@ namespace ECDatabaseEngine
                 records = new List<ECTable>();
 
             currRecIdx = 0;
+            currRecIdxEnumerator = -1;
             filter = new Dictionary<string, string>();
             ranges = new Dictionary<string, KeyValuePair<string, string>>();
             joins = new List<ECJoin>();
@@ -157,9 +155,7 @@ namespace ECDatabaseEngine
         public void Reset()
         {
             InvokeMethodeOnJoinedTables("Reset");
-            currRecIdx = 0;
-            CopyFrom(records[0], false);
-            OnChanged?.Invoke(this, this);
+            currRecIdxEnumerator = -1;                        
         }
 
         /// <summary>
@@ -182,7 +178,7 @@ namespace ECDatabaseEngine
         /// </summary>
         /// <typeparam name="T">Type of the joined table (ECTable subclass)</typeparam>
         /// <returns>Instance of the joined table with all records.</returns>
-        public T JoinedTable<T>()
+        public T GetJoinedTable<T>()
         {
             try
             {
@@ -298,16 +294,7 @@ namespace ECDatabaseEngine
             CopyFrom(records[currRecIdx], false);
             InvokeMethodeOnJoinedTables("First");
             OnChanged?.Invoke(this, this);
-        }
-
-        /// <summary>
-        /// IEnumerable implementation.
-        /// </summary>
-        /// <returns>True: Some more records to come. False: No more records to come.</returns>
-        public bool MoveNext()
-        {
-            return Next();
-        }
+        }       
 
         /// <summary>
         /// Load records from database.
@@ -463,6 +450,18 @@ namespace ECDatabaseEngine
         }
 
         /// <summary>
+        /// Writes all records in the buffer to the database
+        /// </summary>
+        public void ModifyAll()
+        {            
+            for (int i = 0; i < records.Count; i++)
+            {
+                ECDatabaseConnection.Connection.Modify(records[i]);
+            }
+            records[currRecIdx].CopyFrom(this);
+        }
+
+        /// <summary>
         /// Returns the position of the current record in the loaded dataset
         /// </summary>
         /// <returns>Index of the current record</returns>
@@ -491,7 +490,7 @@ namespace ECDatabaseEngine
             currRecIdx = _pos;
 
             CopyFrom(records[currRecIdx], false);
-            InvokeMethodeOnJoinedTables("SetCurrentBufferIndex", new object[] { _pos });
+            InvokeMethodeOnJoinedTables("SetCurrentBufferIndex", false, new object[] { _pos });
             OnChanged?.Invoke(this, this);
         }
 
@@ -708,9 +707,9 @@ namespace ECDatabaseEngine
 
         #endregion
 
-        private void InvokeMethodeOnJoinedTables(string _method, object[] _params = null)
+        private void InvokeMethodeOnJoinedTables(string _method, bool _fillNullParms = true, object[] _params = null)
         {
-            if (_params == null)
+            if (_params == null && _fillNullParms)
                 _params = new object[] { true };
             foreach (ECJoin j in joins)
             {
@@ -719,6 +718,54 @@ namespace ECDatabaseEngine
         }
 
         #region Interface
+
+        /// <summary>
+        /// IEnumerable implementation.
+        /// </summary>
+        /// <returns>True: Some more records to come. False: No more records to come.</returns>
+        public bool MoveNext()
+        {
+            bool ret = false;
+            if (records.Count == 0)
+                return ret;
+
+            if (currRecIdxEnumerator >= records.Count - 1) //Here we stand at the last record
+            {
+                currRecIdxEnumerator = -1;
+                ret = false;
+            }
+            else
+            {
+                currRecIdxEnumerator++;
+                ret = true;
+            }
+
+            InvokeMethodeOnJoinedTables("MoveNext", false);
+            return ret;
+        }
+
+        /// <summary>
+        /// IEnumerator implementation. Returns the current record.
+        /// </summary>
+        public object Current
+        {
+            get
+            {
+                ECTable _dummy = (ECTable)Activator.CreateInstance(this.GetType());
+
+                _dummy.CopyFrom(records[currRecIdxEnumerator], false);                               
+                _dummy.joins = new List<ECJoin>(this.joins);
+
+                foreach (ECJoin j in _dummy.joins)
+                {
+                    j.Table.CopyFrom(((ECTable)j.Table).GetType().GetProperty("Current").GetValue(j.Table));
+                }
+
+                return _dummy;
+            }
+            
+        }
+
         /// <summary>
         /// IEquatable implementation.
         /// </summary>
@@ -744,6 +791,7 @@ namespace ECDatabaseEngine
 
             return true;
         }
+
         /// <summary>
         /// IEnumerator implementation.
         /// </summary>
@@ -752,6 +800,7 @@ namespace ECDatabaseEngine
         {
             return this;
         }
+
         /// <summary>
         /// Return the content of the current record as string.
         /// </summary>

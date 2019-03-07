@@ -70,7 +70,7 @@ namespace ECDatabaseWinFormsExtension
         public static void GetSelectedRecords(this DataGridView _dgv, ECTable _table)
         {
             string filter = "";
-
+            
             foreach (DataGridViewCell c in _dgv.SelectedCells)
             {
                 string cellName = String.Format("{0}_{1}", _table.TableName, nameof(_table.RecId));
@@ -78,8 +78,8 @@ namespace ECDatabaseWinFormsExtension
             }
             if (filter != "")
             {
-                _table.Clear();
-                _table.SetFilter("RecId", filter.Substring(0, filter.Length - 1));
+                //_table.Clear();
+                _table.SetFilter(nameof(_table.RecId), filter.Substring(0, filter.Length - 1));
                 _table.FindSet();
             }
             else

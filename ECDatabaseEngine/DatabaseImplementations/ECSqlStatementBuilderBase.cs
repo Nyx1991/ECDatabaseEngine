@@ -167,7 +167,7 @@ namespace ECDatabaseEngine
                                                   string _filter, 
                                                   ref Dictionary<string, string> _parameter)
         {
-            string fieldName = "`" + _fieldName + "`";
+            string fieldName = $"`{_table.TableName}`.`{_fieldName}`";
             string[] val = { "", "" };
             int valId = 0;
             bool foundPoint = false;

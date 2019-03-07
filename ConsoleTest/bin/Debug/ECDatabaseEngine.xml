@@ -67,11 +67,6 @@
             This is a unique identifier (table scope).
             </summary>
         </member>
-        <member name="P:ECDatabaseEngine.ECTable.Current">
-            <summary>
-            IEnumerator implementation. Returns the current record.
-            </summary>
-        </member>
         <member name="P:ECDatabaseEngine.ECTable.Count">
             <summary>
             Record count.
@@ -108,7 +103,7 @@
             In other words: unload all records.
             </summary>
         </member>
-        <member name="M:ECDatabaseEngine.ECTable.JoinedTable``1">
+        <member name="M:ECDatabaseEngine.ECTable.GetJoinedTable``1">
             <summary>
             Get the instance of a table you Joined before.
             Make sure to use a subclass of ECTable.
@@ -151,12 +146,6 @@
             <summary>
             Get the firs record
             </summary>
-        </member>
-        <member name="M:ECDatabaseEngine.ECTable.MoveNext">
-            <summary>
-            IEnumerable implementation.
-            </summary>
-            <returns>True: Some more records to come. False: No more records to come.</returns>
         </member>
         <member name="M:ECDatabaseEngine.ECTable.FindSet(System.Boolean)">
             <summary>
@@ -214,6 +203,11 @@
             Has no impact on joined tables.
             </summary>
         </member>
+        <member name="M:ECDatabaseEngine.ECTable.ModifyAll">
+            <summary>
+            Writes all records in the buffer to the database
+            </summary>
+        </member>
         <member name="M:ECDatabaseEngine.ECTable.GetCurrentBufferIndex">
             <summary>
             Returns the position of the current record in the loaded dataset
@@ -253,6 +247,17 @@
             </summary>
             <param name="_dt">DateTime to be converted.></param>
             <returns>String with date-time in SQL format</returns>
+        </member>
+        <member name="M:ECDatabaseEngine.ECTable.MoveNext">
+            <summary>
+            IEnumerable implementation.
+            </summary>
+            <returns>True: Some more records to come. False: No more records to come.</returns>
+        </member>
+        <member name="P:ECDatabaseEngine.ECTable.Current">
+            <summary>
+            IEnumerator implementation. Returns the current record.
+            </summary>
         </member>
         <member name="M:ECDatabaseEngine.ECTable.Equals(ECDatabaseEngine.ECTable)">
             <summary>
