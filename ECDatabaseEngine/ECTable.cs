@@ -33,7 +33,7 @@ namespace ECDatabaseEngine
         /// Use AddOrderBy(_fieldName) to add fields you want the records to be orderd after
         /// </summary>
         public OrderType OrderType { get; set; }
-        private string SqlTableName { get => "`" + TableName + "`."; }
+        internal string SqlTableName { get => "`" + TableName + "`."; }
         
         int currRecIdx;
         int currRecIdxEnumerator;
