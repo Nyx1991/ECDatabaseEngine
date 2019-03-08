@@ -43,7 +43,7 @@ namespace ECDatabaseEngine
             ret = ret.Substring(0, ret.Length - 1);
 
             if (_isRootTable)
-                ret += " FROM " + "`" + _table.TableName + "`";
+                ret += $" FROM {_table.SqlTableName}";
 
             return ret;
         }
@@ -153,9 +153,9 @@ namespace ECDatabaseEngine
                         break;
                 }
                 if (j.OnTargetField != null)
-                    ret += "`" + joinTable.TableName + "` ON " + "`" + joinTable.TableName + "`." + j.OnTargetField + "=`" + _table.TableName + "`." + j.OnSourceField;
+                    ret += $"{joinTable.SqlTableName} ON {joinTable.SqlTableName}.{j.OnTargetField} = {_table.SqlTableName}.{j.OnSourceField}";
                 else
-                    ret += "`" + joinTable.TableName + "` ON " + "`" + joinTable.TableName + "`.RecId=`" + _table.TableName + "`." + j.OnSourceField;
+                    ret += $"{joinTable.SqlTableName} ON {joinTable.SqlTableName}.{nameof(joinTable.RecId)} = {_table.SqlTableName}.{j.OnSourceField}";
                 ret += MakeJoins(joinTable);
             }
 
@@ -167,7 +167,6 @@ namespace ECDatabaseEngine
                                                   string _filter, 
                                                   ref Dictionary<string, string> _parameter)
         {
-            string fieldName = $"`{_table.TableName}`.`{_fieldName}`";
             string[] val = { "", "" };
             int valId = 0;
             bool foundPoint = false;
@@ -312,7 +311,7 @@ namespace ECDatabaseEngine
 
         virtual protected string GetSqlTableName(ECTable _table)
         {
-            return "`" + _table.TableName + "`.";
+            return _table.SqlTableName;
         }
         
         #endregion
