@@ -11,7 +11,6 @@ E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\obj\Debug\ConsoleTest.cspr
 E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\obj\Debug\ConsoleTest.exe
 E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\obj\Debug\ConsoleTest.pdb
 E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Debug\ConsoleTest.pdb
-E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\obj\Debug\ConsoleTest.csprojResolveAssemblyReference.cache
 E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Debug\System.Data.SQLite.dll
 E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Debug\ECDatabaseEngine.dll.config
 E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Debug\System.Data.SQLite.xml
@@ -23,3 +22,4 @@ E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Debug\System.Data.SQLi
 E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Debug\EntityFramework.xml
 E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Debug\EntityFramework.SqlServer.xml
 E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Debug\ECDatabaseEngine.xml
+E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\obj\Debug\ConsoleTest.csprojAssemblyReference.cache

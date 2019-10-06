@@ -46,12 +46,13 @@ namespace ECDatabaseWinFormsExtension
         {            
             PropertyInfo p = _table.GetType().GetProperty(_fieldName);
             
-            _table.FindSet(false);
-            do
-            {
-                int index = _listBox.Items.Add(p.GetValue(_table));                
-            } while (_table.Next(false));
+            if (_table.Count == 0)
+                _table.FindSet(false);
 
+            foreach(ECTable t in _table)
+            {
+                _listBox.Items.Add(p.GetValue(t));                
+            }
         }
 
         /// <summary>
@@ -79,34 +80,47 @@ namespace ECDatabaseWinFormsExtension
                 throw new ECBindingAlreadyExistsException(_listBox);
             }
 
+            _listBox.SetECTableFieldTextBinding(_table, _fieldName);
+
             PropertyInfo p = _table.GetType().GetProperty(_fieldName);
             Dictionary<int, int> indexBufferIdxMap = new Dictionary<int, int>();
 
             listBoxesWithECTableFieldItemBinding.Add(_listBox);
 
-            _table.FindSet(false);
-            do
+            if (_table.Count == 0)
+                _table.FindSet(false);
+
+            int i = 0;
+            foreach (ECTable t in _table)
             {
-                int index = _listBox.Items.Add(p.GetValue(_table));
-                indexBufferIdxMap.Add(index, _table.GetCurrentBufferIndex());
-            } while (_table.Next(false));
+                int index = _listBox.Items.Add(p.GetValue(t));
+                indexBufferIdxMap.Add(index, i);
+                i++;
+            }
 
             if (listBoxBufferIdxMap.ContainsKey(_listBox))
                 listBoxBufferIdxMap.Remove(_listBox);
-
             listBoxBufferIdxMap.Add(_listBox, indexBufferIdxMap);
 
             _table.OnAfterModify += delegate (object sender, ECTable _callerTable)
-            {
-                int listIdx = listBoxBufferIdxMap[_listBox].First( x => x.Value == _callerTable.GetCurrentBufferIndex()).Key;
-                _listBox.Items[listIdx] = p.GetValue(_callerTable);
+            {                
+                int listIdx = listBoxBufferIdxMap[_listBox].First(x => x.Value == _callerTable.GetCurrentBufferIndex()).Key;
+                _listBox.Items[listIdx] = p.GetValue(_callerTable);            
             };
 
             _table.OnAfterFindSet += delegate (object sender, ECTable _callerTable)
             {
                 LoadItemsFromECTable(_listBox, _table, _fieldName);
             };
-                
+
+            _table.OnChanged += delegate (object sender, ECTable _callerTable)
+            {                
+                int listIdx = listBoxBufferIdxMap[_listBox].First(x => x.Value == _callerTable.GetCurrentBufferIndex()).Key;
+                _listBox.Items.RemoveAt(listIdx);
+                _listBox.Items.Insert(listIdx, _table.GetType().GetProperty(_fieldName).GetValue(_table));
+                _listBox.SelectedIndex = listIdx;
+            };           
+
             _listBox.Disposed += delegate (object sender, EventArgs e)
             {
                 listBoxBufferIdxMap.Remove(_listBox);

@@ -34,7 +34,7 @@ namespace ECDatabaseEngine
 
             foreach (PropertyInfo p in _table.GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute))))
             {
-                ret += GetSqlTableName(_table) + p.Name + " AS '" + _table.TableName + "." + p.Name + "',";
+                ret += GetSqlTableName(_table) + "." + p.Name + " AS '" + _table.TableName + "." + p.Name + "',";
             }
             foreach (ECJoin j in _table.Joins)
             {
@@ -43,7 +43,7 @@ namespace ECDatabaseEngine
             ret = ret.Substring(0, ret.Length - 1);
 
             if (_isRootTable)
-                ret += $" FROM {_table.SqlTableName}";
+                ret += $" FROM {GetSqlTableName(_table)}";
 
             return ret;
         }
@@ -73,11 +73,12 @@ namespace ECDatabaseEngine
 
 
             foreach (KeyValuePair<string, KeyValuePair<string, string>> kp in _table.Ranges)
+            { 
                 if (kp.Value.Value.Equals(""))
                 {
                     string keyParm = _table.TableName + kp.Key;
                     _parameters.Add(keyParm, kp.Value.Key);
-                    _where.Add(String.Format("{0}{1}=@{2}",
+                    _where.Add(String.Format("{0}.{1}=@{2}",
                             GetSqlTableName(_table),
                             kp.Key,
                             keyParm));                     
@@ -87,12 +88,13 @@ namespace ECDatabaseEngine
                     string keyParm = _table.TableName + kp.Key;
                     _parameters.Add($"K{keyParm}", kp.Value.Key);
                     _parameters.Add($"V{keyParm}", kp.Value.Value);
-                    _where.Add(String.Format("({0} BETWEEN @K{2} AND @V{3}",
+                    _where.Add(String.Format("({0}.{1} BETWEEN @K{2} AND @V{3}",
                                             GetSqlTableName(_table), 
                                             kp.Key, 
                                             keyParm, 
                                             keyParm));
                 }
+            }
 
             foreach (KeyValuePair<string, string> kp in _table.Filter)
             {
@@ -113,7 +115,7 @@ namespace ECDatabaseEngine
             string orderJ = "";
 
             foreach (string s in _table.Order)
-                order += GetSqlTableName(_table) + s + ",";
+                order += $"{GetSqlTableName(_table)}.{s},";
 
             foreach (ECJoin j in _table.Joins)
             {
@@ -170,7 +172,7 @@ namespace ECDatabaseEngine
             string[] val = { "", "" };
             int valId = 0;
             bool foundPoint = false;
-            string clause = "(" + fieldName;
+            string clause = $"( {GetSqlTableName(_table)}.{_fieldName}";
             string operators = "<>=";
             for (int i = 0; i < _filter.Length; i++)
             {
@@ -214,10 +216,11 @@ namespace ECDatabaseEngine
                         {
                             if (!operators.Contains(clause.Last()))
                                 clause += "=";
-                            clause += String.Format("@F{0}{1} OR {2}",
+                            clause += String.Format("@F{0}{1} OR {2}.{3}",
                                                     _table.TableName,
                                                     i,
-                                                    fieldName);
+                                                    GetSqlTableName(_table),
+                                                    _fieldName);
                             _parameter.Add("F" + _table.TableName + i, val[valId % 2]);
                         }
                         else
@@ -237,7 +240,7 @@ namespace ECDatabaseEngine
                             clause += String.Format("@F{0}{1} AND {2}",
                                                     _table.TableName,
                                                     i,
-                                                    fieldName);
+                                                    _fieldName);
                             _parameter.Add($"F{i}", val[valId % 2]);
                         }
                         else

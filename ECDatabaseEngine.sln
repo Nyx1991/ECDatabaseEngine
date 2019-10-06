@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleTest", "ConsoleTest\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ECDatabaseWinFormsExtension", "ECDatabaseWinFormsExtension\ECDatabaseWinFormsExtension.csproj", "{D99FDEF8-3924-488E-A2D5-A6B06CC4ED17}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinFormsTest", "WinFormsTest\WinFormsTest.csproj", "{D01F3E88-A070-40BA-84A3-8DEF49F7687E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -41,18 +43,20 @@ Global
 		{D99FDEF8-3924-488E-A2D5-A6B06CC4ED17}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D99FDEF8-3924-488E-A2D5-A6B06CC4ED17}.Release|Default.ActiveCfg = Release|Any CPU
 		{D99FDEF8-3924-488E-A2D5-A6B06CC4ED17}.Release|Default.Build.0 = Release|Any CPU
+		{D01F3E88-A070-40BA-84A3-8DEF49F7687E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D01F3E88-A070-40BA-84A3-8DEF49F7687E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D01F3E88-A070-40BA-84A3-8DEF49F7687E}.Debug|Default.ActiveCfg = Debug|Any CPU
+		{D01F3E88-A070-40BA-84A3-8DEF49F7687E}.Debug|Default.Build.0 = Debug|Any CPU
+		{D01F3E88-A070-40BA-84A3-8DEF49F7687E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D01F3E88-A070-40BA-84A3-8DEF49F7687E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D01F3E88-A070-40BA-84A3-8DEF49F7687E}.Release|Default.ActiveCfg = Release|Any CPU
+		{D01F3E88-A070-40BA-84A3-8DEF49F7687E}.Release|Default.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {844F0390-1FF9-49C5-9D61-E5AB7D28D72C}
-	EndGlobalSection
-	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|Any CPU = Debug|Any CPU
-		Debug|Default = Debug|Default
-		Release|Any CPU = Release|Any CPU
-		Release|Default = Release|Default
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

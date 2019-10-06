@@ -1,0 +1,303 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>ECDatabaseEngine</name>
+    </assembly>
+    <members>
+        <member name="T:ECDatabaseEngine.ECTable">
+            <summary>
+            Abstract table class. Use this class as a base for your tables.
+            </summary>
+        </member>
+        <member name="P:ECDatabaseEngine.ECTable.OrderType">
+            <summary>
+            Determines in which order the records should be loaded.
+            Use AddOrderBy(_fieldName) to add fields you want the records to be orderd after
+            </summary>
+        </member>
+        <member name="E:ECDatabaseEngine.ECTable.OnBeforeInsert">
+            <summary>
+            Invoked before a new record will be inserted an written to the database.
+            </summary>
+        </member>
+        <member name="E:ECDatabaseEngine.ECTable.OnAfterInsert">
+            <summary>
+            Invoked after a new record has been inserted and written to the database.
+            </summary>
+        </member>
+        <member name="E:ECDatabaseEngine.ECTable.OnBeforeModify">
+            <summary>
+            Invoked before all changes on the current record will be written to the database.
+            </summary>
+        </member>
+        <member name="E:ECDatabaseEngine.ECTable.OnAfterModify">
+            <summary>
+            Invoked after all changes has been written to the database.
+            </summary>
+        </member>
+        <member name="E:ECDatabaseEngine.ECTable.OnBeforeDelete">
+            <summary>
+            Invoked before the current record will be deleted from the database.
+            </summary>
+        </member>
+        <member name="E:ECDatabaseEngine.ECTable.OnAfterDelete">
+            <summary>
+            Invoked after the current record has been deleted from the database.
+            </summary>
+        </member>
+        <member name="E:ECDatabaseEngine.ECTable.OnChanged">
+            <summary>
+            Invoked after a new record has been loaded.
+            Can be used to keep UI up to date, for example.
+            </summary>
+        </member>
+        <member name="E:ECDatabaseEngine.ECTable.OnBeforeFindSet">
+            <summary>
+            Invoked before the FindSet-Method has been called. Can be used to determine if the whole data in the table will be changed.
+            </summary>
+        </member>
+        <member name="E:ECDatabaseEngine.ECTable.OnAfterFindSet">
+            <summary>
+            Invoked after the FindSet-Method has been called. Can be used to determine if the whole data in the table has changed.
+            </summary>
+        </member>
+        <member name="P:ECDatabaseEngine.ECTable.RecId">
+            <summary>
+            Ongoing primary key of the table.
+            This is a unique identifier (table scope).
+            </summary>
+        </member>
+        <member name="P:ECDatabaseEngine.ECTable.Count">
+            <summary>
+            Record count.
+            </summary>
+        </member>
+        <member name="P:ECDatabaseEngine.ECTable.TableName">
+            <summary>
+            Return the name of the table.
+            </summary>
+        </member>
+        <member name="M:ECDatabaseEngine.ECTable.#ctor">
+            <summary>
+            Initializes a new ECTable instance.
+            </summary>
+        </member>
+        <member name="M:ECDatabaseEngine.ECTable.Init">
+            <summary>
+            Removes all filters and ranges and unloads all loaded Records. Initializes all Fields.
+            </summary>
+        </member>
+        <member name="M:ECDatabaseEngine.ECTable.Clear">
+            <summary>
+            Removes all filters, ranges and joins
+            </summary>
+        </member>
+        <member name="M:ECDatabaseEngine.ECTable.Reset">
+            <summary>
+            IEnumerator implementation: Set current Position to first record
+            </summary>
+        </member>
+        <member name="M:ECDatabaseEngine.ECTable.DeleteRecords">
+            <summary>
+            Clears the internal record-list.
+            In other words: unload all records.
+            </summary>
+        </member>
+        <member name="M:ECDatabaseEngine.ECTable.GetJoinedTable``1">
+            <summary>
+            Get the instance of a table you Joined before.
+            Make sure to use a subclass of ECTable.
+            </summary>
+            <typeparam name="T">Type of the joined table (ECTable subclass)</typeparam>
+            <returns>Instance of the joined table with all records.</returns>
+        </member>
+        <member name="M:ECDatabaseEngine.ECTable.AddJoin(ECDatabaseEngine.ECTable,System.String,ECDatabaseEngine.ECJoinType)">
+            <summary>
+            Join a table. You can only join a table once per type.
+            </summary>
+            <param name="_table">Instance of the table you want to join.</param>
+            <param name="_foreignKey">Field that represents the foreign key.
+            In the other table it will be the RecId be default. (Join someTable ON thisTable.ForeignKey=_table.RecId)</param>
+            <param name="_joinType">INNER, LEFT OUTER or RIGHT OUTER</param>
+        </member>
+        <member name="M:ECDatabaseEngine.ECTable.AddJoin(ECDatabaseEngine.ECTable,System.String,System.String,ECDatabaseEngine.ECJoinType)">
+            <summary>
+            Join a table. You can only join a table once per type.
+            </summary>
+            <param name="_table">Instance of the table you want to join.</param>
+            <param name="_foreignKey">Field that represents the foreign key</param>
+            <param name="_onTargetField">The field on the other table to which the join should be connected to.
+            (Join someTable ON thisTable.SourceField=_table.TargetField)</param>
+            <param name="_joinType">INNER, LEFT OUTER or RIGHT OUTER</param>
+        </member>
+        <member name="M:ECDatabaseEngine.ECTable.Next(System.Boolean)">
+            <summary>
+            Get the next record
+            </summary>
+            <param name="_invokeEvents">False: Events will not be invoked. Default: True</param>
+            <returns>True if a record was found. False if no more record was found</returns>
+        </member>
+        <member name="M:ECDatabaseEngine.ECTable.Last">
+            <summary>
+            Get the last record
+            </summary>
+        </member>
+        <member name="M:ECDatabaseEngine.ECTable.First">
+            <summary>
+            Get the firs record
+            </summary>
+        </member>
+        <member name="M:ECDatabaseEngine.ECTable.FindSet(System.Boolean)">
+            <summary>
+            Load records from database.
+            </summary>
+            <param name="_invokeEvents">False: Events will not be invoked. Default: True</param>
+        </member>
+        <member name="M:ECDatabaseEngine.ECTable.Get(System.Int32)">
+            <summary>
+            Get a specific record from the database by its RecId
+            </summary>
+            <param name="_recId">RecId of the record</param>
+        </member>
+        <member name="M:ECDatabaseEngine.ECTable.SetFilter(System.String,System.String)">
+            <summary>
+            Add a filterstring on a field.          
+            </summary>
+            <param name="_fieldName">Field the filter should be applied to.</param>
+            <param name="_filterString">Filter string. Leave empty to remove the filter.</param>
+        </member>
+        <member name="M:ECDatabaseEngine.ECTable.SetRange(System.String,System.String,System.String)">
+            <summary>
+            Add a range on a field
+            </summary>
+            <param name="_fieldName">Field the range should be applied to.</param>
+            <param name="_from">From value. Leave empty to remove the range.</param>
+            <param name="_to">To value</param>
+        </member>
+        <member name="M:ECDatabaseEngine.ECTable.AddOrderBy(System.String)">
+            <summary>
+            Add field you want your result to be orderd after.
+            </summary>
+            <param name="_fieldName"></param>
+        </member>
+        <member name="M:ECDatabaseEngine.ECTable.Insert">
+            <summary>
+            Insert a new record to the database. Make sure to fill it before.
+            </summary>
+        </member>
+        <member name="M:ECDatabaseEngine.ECTable.Delete">
+            <summary>
+            Deletes the current record from the database.
+            Has no impact on joined tables.
+            </summary>
+        </member>
+        <member name="M:ECDatabaseEngine.ECTable.DeleteAll">
+            <summary>
+            Deletes all currently loaded records from the database.
+            Has no impact on joined tables.
+            </summary>        
+        </member>
+        <member name="M:ECDatabaseEngine.ECTable.Modify">
+            <summary>
+            Writes the current record to the database.
+            Has no impact on joined tables.
+            </summary>
+        </member>
+        <member name="M:ECDatabaseEngine.ECTable.ModifyAll">
+            <summary>
+            Writes all records in the buffer to the database
+            </summary>
+        </member>
+        <member name="M:ECDatabaseEngine.ECTable.GetCurrentBufferIndex">
+            <summary>
+            Returns the position of the current record in the loaded dataset
+            </summary>
+            <returns>Index of the current record</returns>
+        </member>
+        <member name="M:ECDatabaseEngine.ECTable.SetCurrentBufferIndex(System.Int32)">
+            <summary>
+            Loads the record at the given position in the dataset
+            </summary>
+            <param name="_pos">Index of the record</param>
+        </member>
+        <member name="M:ECDatabaseEngine.ECTable.SynchronizeSchema">
+            <summary>
+            Synchronizes the table schema to the database.
+            Important: This can lead to data loss.
+            </summary>
+        </member>
+        <member name="M:ECDatabaseEngine.ECTable.CopyFrom(ECDatabaseEngine.ECTable,System.Boolean)">
+            <summary>
+            Copy the content of all fields from the currently active record of a given tabel
+            to the currently active record of this table
+            </summary>
+            <param name="_table">Table from which the data should be copied</param>
+            <param name="_invokeOnChangeEvent">True: OnChange Event will be invoked if function is called. False: OnChange Event will not be invoked</param>
+        </member>
+        <member name="M:ECDatabaseEngine.ECTable.DateTimeToSqlDate(System.DateTime)">
+            <summary>
+            Convert a DateTime variable into the SQL date notation.
+            </summary>
+            <param name="_dt">DateTime to be converted.></param>
+            <returns>String with date in SQL format</returns>
+        </member>
+        <member name="M:ECDatabaseEngine.ECTable.DateTimeToSqlDateTime(System.DateTime)">
+            <summary>
+            Convert a DateTime variable into the SQL date-time notation.
+            </summary>
+            <param name="_dt">DateTime to be converted.></param>
+            <returns>String with date-time in SQL format</returns>
+        </member>
+        <member name="M:ECDatabaseEngine.ECTable.MoveNext">
+            <summary>
+            IEnumerable implementation.
+            </summary>
+            <returns>True: Some more records to come. False: No more records to come.</returns>
+        </member>
+        <member name="P:ECDatabaseEngine.ECTable.Current">
+            <summary>
+            IEnumerator implementation. Returns the current record.
+            </summary>
+        </member>
+        <member name="M:ECDatabaseEngine.ECTable.Equals(ECDatabaseEngine.ECTable)">
+            <summary>
+            IEquatable implementation.
+            </summary>
+            <param name="_other">Table to which this table should be compared to.</param>
+            <returns>True: if both RecIds are the same. False: If not so.</returns>
+        </member>
+        <member name="M:ECDatabaseEngine.ECTable.GetEnumerator">
+            <summary>
+            IEnumerator implementation.
+            </summary>
+            <returns>IEnumerator</returns>
+        </member>
+        <member name="M:ECDatabaseEngine.ECTable.ToString">
+            <summary>
+            Return the content of the current record as string.
+            </summary>
+            <returns>Contents of all fields.</returns>
+        </member>
+        <member name="T:ECDatabaseEngine.LibResource">
+            <summary>
+              Eine stark typisierte Ressourcenklasse zum Suchen von lokalisierten Zeichenfolgen usw.
+            </summary>
+        </member>
+        <member name="P:ECDatabaseEngine.LibResource.ResourceManager">
+            <summary>
+              Gibt die zwischengespeicherte ResourceManager-Instanz zurück, die von dieser Klasse verwendet wird.
+            </summary>
+        </member>
+        <member name="P:ECDatabaseEngine.LibResource.Culture">
+            <summary>
+              Überschreibt die CurrentUICulture-Eigenschaft des aktuellen Threads für alle
+              Ressourcenzuordnungen, die diese stark typisierte Ressourcenklasse verwenden.
+            </summary>
+        </member>
+        <member name="P:ECDatabaseEngine.LibResource.empty">
+            <summary>
+              Sucht eine lokalisierte Ressource vom Typ System.Byte[].
+            </summary>
+        </member>
+    </members>
+</doc>

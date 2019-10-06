@@ -33,7 +33,7 @@ namespace ECDatabaseEngine
         /// Use AddOrderBy(_fieldName) to add fields you want the records to be orderd after
         /// </summary>
         public OrderType OrderType { get; set; }
-        internal string SqlTableName { get => "`" + TableName + "`."; }
+        internal string SqlTableName { get => "`" + TableName + "`"; }
         
         int currRecIdx;
         int currRecIdxEnumerator;
@@ -42,40 +42,40 @@ namespace ECDatabaseEngine
         /// <summary>
         /// Invoked before a new record will be inserted an written to the database.
         /// </summary>
-        public EventHandler<ECTable> OnBeforeInsert;
+        public event EventHandler<ECTable> OnBeforeInsert;
         /// <summary>
         /// Invoked after a new record has been inserted and written to the database.
         /// </summary>
-        public EventHandler<ECTable> OnAfterInsert;
+        public event EventHandler<ECTable> OnAfterInsert;
         /// <summary>
         /// Invoked before all changes on the current record will be written to the database.
         /// </summary>
-        public EventHandler<ECTable> OnBeforeModify;
+        public event EventHandler<ECTable> OnBeforeModify;
         /// <summary>
         /// Invoked after all changes has been written to the database.
         /// </summary>
-        public EventHandler<ECTable> OnAfterModify;
+        public event EventHandler<ECTable> OnAfterModify;
         /// <summary>
         /// Invoked before the current record will be deleted from the database.
         /// </summary>
-        public EventHandler<ECTable> OnBeforeDelete;        
+        public event EventHandler<ECTable> OnBeforeDelete;        
         /// <summary>
         /// Invoked after the current record has been deleted from the database.
         /// </summary>
-        public EventHandler<ECTable> OnAfterDelete;
+        public event EventHandler<ECTable> OnAfterDelete;
         /// <summary>
         /// Invoked after a new record has been loaded.
         /// Can be used to keep UI up to date, for example.
         /// </summary>
-        public EventHandler<ECTable> OnChanged;
+        public event EventHandler<ECTable> OnChanged;
         /// <summary>
         /// Invoked before the FindSet-Method has been called. Can be used to determine if the whole data in the table will be changed.
         /// </summary>
-        public EventHandler<ECTable> OnBeforeFindSet;
+        public event EventHandler<ECTable> OnBeforeFindSet;
         /// <summary>
         /// Invoked after the FindSet-Method has been called. Can be used to determine if the whole data in the table has changed.
         /// </summary>
-        public EventHandler<ECTable> OnAfterFindSet;
+        public event EventHandler<ECTable> OnAfterFindSet;
 
         #endregion
 
@@ -193,17 +193,17 @@ namespace ECDatabaseEngine
         /// Join a table. You can only join a table once per type.
         /// </summary>
         /// <param name="_table">Instance of the table you want to join.</param>
-        /// <param name="_onSourceField">The field on this table to which the join should be connected to.
-        /// In the other table it will be the RecId. (Join someTable ON thisTable.SourceField=_table.RecId)</param>
+        /// <param name="_foreignKey">Field that represents the foreign key.
+        /// In the other table it will be the RecId be default. (Join someTable ON thisTable.ForeignKey=_table.RecId)</param>
         /// <param name="_joinType">INNER, LEFT OUTER or RIGHT OUTER</param>
-        public void AddJoin(ECTable _table, string _onSourceField, ECJoinType _joinType)
+        public void AddJoin(ECTable _table, string _foreignKey, ECJoinType _joinType)
         {
-            if (GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute)) && x.Name == _onSourceField).Count() == 0)
-                throw new ECFieldNotFoundException("Field '" + _onSourceField + "' not found in table '" + TableName + "'");
+            if (GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute)) && x.Name == _foreignKey).Count() == 0)
+                throw new ECFieldNotFoundException("Field '" + _foreignKey + "' not found in table '" + TableName + "'");
 
             ECJoin join = new ECJoin();
             join.JoinType = _joinType;
-            join.OnSourceField = _onSourceField;
+            join.OnSourceField = _foreignKey;
             join.Table = _table;
             joins.Add(join);
         }
@@ -211,14 +211,14 @@ namespace ECDatabaseEngine
         /// Join a table. You can only join a table once per type.
         /// </summary>
         /// <param name="_table">Instance of the table you want to join.</param>
-        /// <param name="_onSourceField">The field on this table to which the join should be connected to.</param>
+        /// <param name="_foreignKey">Field that represents the foreign key</param>
         /// <param name="_onTargetField">The field on the other table to which the join should be connected to.
-        /// In the other table it will be the RecId. (Join someTable ON thisTable.SourceField=_table.TargetField)</param>
+        /// (Join someTable ON thisTable.SourceField=_table.TargetField)</param>
         /// <param name="_joinType">INNER, LEFT OUTER or RIGHT OUTER</param>
-        public void AddJoin(ECTable _table, string _onSourceField, string _onTargetField, ECJoinType _joinType)
+        public void AddJoin(ECTable _table, string _foreignKey, string _onTargetField, ECJoinType _joinType)
         {
-            if (GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute)) && x.Name == _onSourceField).Count() == 0)
-                throw new ECFieldNotFoundException("Field '" + _onSourceField + "' not found in table '" + TableName + "'");
+            if (GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute)) && x.Name == _foreignKey).Count() == 0)
+                throw new ECFieldNotFoundException("Field '" + _foreignKey + "' not found in table '" + TableName + "'");
 
             if (_table.GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute)) && x.Name == _onTargetField).Count() == 0)
                 throw new ECFieldNotFoundException("Field '" + _onTargetField + "' not found in table '" + _table.TableName + "'");
@@ -227,7 +227,7 @@ namespace ECDatabaseEngine
             ECJoin join = new ECJoin();
             join.JoinType = _joinType;
             join.OnTargetField = _onTargetField;
-            join.OnSourceField = _onSourceField;
+            join.OnSourceField = _foreignKey;
             join.Table = _table;
             joins.Add(join);
         }
@@ -751,19 +751,27 @@ namespace ECDatabaseEngine
         {
             get
             {
-                ECTable _dummy = (ECTable)Activator.CreateInstance(this.GetType());
+                ECTable dummy = (ECTable)Activator.CreateInstance(this.GetType());
 
-                _dummy.CopyFrom(records[currRecIdxEnumerator], false);                               
-                _dummy.joins = new List<ECJoin>(this.joins);
+                dummy.CopyFrom(records[currRecIdxEnumerator], false);
+                dummy.joins = new List<ECJoin>();
 
-                foreach (ECJoin j in _dummy.joins)
+                foreach (ECJoin j in this.joins)
                 {
-                    j.Table.CopyFrom(((ECTable)j.Table).GetType().GetProperty("Current").GetValue(j.Table));
-                }
+                    ECJoin dummyJoin = (ECJoin)Activator.CreateInstance(typeof(ECJoin));
 
-                return _dummy;
+                    dummyJoin.Table = (ECTable)Activator.CreateInstance(j.Table.GetType());
+                    dummyJoin.JoinType = j.JoinType;
+                    dummyJoin.OnSourceField = j.OnSourceField;
+                    dummyJoin.OnTargetField = j.OnTargetField;                    
+                    dummyJoin.Table.CopyFrom(((ECTable)j.Table).GetType().GetProperty("Current").GetValue(j.Table));
+
+                    dummy.joins.Add(dummyJoin);
+                }                
+
+                return dummy;
             }
-            
+
         }
 
         /// <summary>

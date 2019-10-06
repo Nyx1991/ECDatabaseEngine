@@ -15,48 +15,48 @@
             Use AddOrderBy(_fieldName) to add fields you want the records to be orderd after
             </summary>
         </member>
-        <member name="F:ECDatabaseEngine.ECTable.OnBeforeInsert">
+        <member name="E:ECDatabaseEngine.ECTable.OnBeforeInsert">
             <summary>
             Invoked before a new record will be inserted an written to the database.
             </summary>
         </member>
-        <member name="F:ECDatabaseEngine.ECTable.OnAfterInsert">
+        <member name="E:ECDatabaseEngine.ECTable.OnAfterInsert">
             <summary>
             Invoked after a new record has been inserted and written to the database.
             </summary>
         </member>
-        <member name="F:ECDatabaseEngine.ECTable.OnBeforeModify">
+        <member name="E:ECDatabaseEngine.ECTable.OnBeforeModify">
             <summary>
             Invoked before all changes on the current record will be written to the database.
             </summary>
         </member>
-        <member name="F:ECDatabaseEngine.ECTable.OnAfterModify">
+        <member name="E:ECDatabaseEngine.ECTable.OnAfterModify">
             <summary>
             Invoked after all changes has been written to the database.
             </summary>
         </member>
-        <member name="F:ECDatabaseEngine.ECTable.OnBeforeDelete">
+        <member name="E:ECDatabaseEngine.ECTable.OnBeforeDelete">
             <summary>
             Invoked before the current record will be deleted from the database.
             </summary>
         </member>
-        <member name="F:ECDatabaseEngine.ECTable.OnAfterDelete">
+        <member name="E:ECDatabaseEngine.ECTable.OnAfterDelete">
             <summary>
             Invoked after the current record has been deleted from the database.
             </summary>
         </member>
-        <member name="F:ECDatabaseEngine.ECTable.OnChanged">
+        <member name="E:ECDatabaseEngine.ECTable.OnChanged">
             <summary>
             Invoked after a new record has been loaded.
             Can be used to keep UI up to date, for example.
             </summary>
         </member>
-        <member name="F:ECDatabaseEngine.ECTable.OnBeforeFindSet">
+        <member name="E:ECDatabaseEngine.ECTable.OnBeforeFindSet">
             <summary>
             Invoked before the FindSet-Method has been called. Can be used to determine if the whole data in the table will be changed.
             </summary>
         </member>
-        <member name="F:ECDatabaseEngine.ECTable.OnAfterFindSet">
+        <member name="E:ECDatabaseEngine.ECTable.OnAfterFindSet">
             <summary>
             Invoked after the FindSet-Method has been called. Can be used to determine if the whole data in the table has changed.
             </summary>
@@ -116,8 +116,8 @@
             Join a table. You can only join a table once per type.
             </summary>
             <param name="_table">Instance of the table you want to join.</param>
-            <param name="_onSourceField">The field on this table to which the join should be connected to.
-            In the other table it will be the RecId. (Join someTable ON thisTable.SourceField=_table.RecId)</param>
+            <param name="_foreignKey">Field that represents the foreign key.
+            In the other table it will be the RecId be default. (Join someTable ON thisTable.ForeignKey=_table.RecId)</param>
             <param name="_joinType">INNER, LEFT OUTER or RIGHT OUTER</param>
         </member>
         <member name="M:ECDatabaseEngine.ECTable.AddJoin(ECDatabaseEngine.ECTable,System.String,System.String,ECDatabaseEngine.ECJoinType)">
@@ -125,9 +125,9 @@
             Join a table. You can only join a table once per type.
             </summary>
             <param name="_table">Instance of the table you want to join.</param>
-            <param name="_onSourceField">The field on this table to which the join should be connected to.</param>
+            <param name="_foreignKey">Field that represents the foreign key</param>
             <param name="_onTargetField">The field on the other table to which the join should be connected to.
-            In the other table it will be the RecId. (Join someTable ON thisTable.SourceField=_table.TargetField)</param>
+            (Join someTable ON thisTable.SourceField=_table.TargetField)</param>
             <param name="_joinType">INNER, LEFT OUTER or RIGHT OUTER</param>
         </member>
         <member name="M:ECDatabaseEngine.ECTable.Next(System.Boolean)">

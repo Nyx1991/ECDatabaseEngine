@@ -13,11 +13,13 @@ namespace ECDatabaseWinFormsExtension
     {
         private static Dictionary<ComboBox, Dictionary<int, int>> comboBoxBufferIdxMap;
         private static List<ComboBox> comboBoxesWithECTableFieldItemBinding;
+        private static List<ComboBox> comboBoxesWithECTableFieldTextBinding;
 
         static ComboBoxExtension()
         {
             comboBoxBufferIdxMap = new Dictionary<ComboBox, Dictionary<int, int>>();
             comboBoxesWithECTableFieldItemBinding = new List<ComboBox>();
+            comboBoxesWithECTableFieldTextBinding = new List<ComboBox>();
         }
 
         /// <summary>
@@ -76,17 +78,23 @@ namespace ECDatabaseWinFormsExtension
                 throw new ECBindingAlreadyExistsException(_comboBox);
             }
 
+            _comboBox.SetECTableFieldTextBinding(_table, _fieldName);
+
             PropertyInfo p = _table.GetType().GetProperty(_fieldName);
             Dictionary<int, int> indexBufferIdxMap = new Dictionary<int, int>();
 
             comboBoxesWithECTableFieldItemBinding.Add(_comboBox);
 
-            _table.FindSet(false);
-            do
+            if (_table.Count == 0)
+                _table.FindSet(false);
+
+            int i = 0;
+            foreach (ECTable t in _table)
             {
-                int index = _comboBox.Items.Add(p.GetValue(_table));
-                indexBufferIdxMap.Add(index, _table.GetCurrentBufferIndex());
-            } while (_table.Next(false));
+                int index = _comboBox.Items.Add(p.GetValue(t));
+                indexBufferIdxMap.Add(index, i);
+                i++;
+            }
 
             if (comboBoxBufferIdxMap.ContainsKey(_comboBox))
                 comboBoxBufferIdxMap.Remove(_comboBox);
@@ -98,18 +106,54 @@ namespace ECDatabaseWinFormsExtension
                 int comboIdx = comboBoxBufferIdxMap[_comboBox].First( x => x.Value == _callerTable.GetCurrentBufferIndex()).Key;
                 _comboBox.Items[comboIdx] = p.GetValue(_callerTable);
             };
-
+            
             _table.OnAfterFindSet += delegate (object sender, ECTable _callerTable)
             {
                 LoadItemsFromECTable(_comboBox, _table, _fieldName);
             };
-                
+
+            _table.OnChanged += delegate (object sender, ECTable _callerTable)
+            {
+                int comboIdx = comboBoxBufferIdxMap[_comboBox].First(x => x.Value == _callerTable.GetCurrentBufferIndex()).Key;
+                _comboBox.Items.RemoveAt(comboIdx);
+                _comboBox.Items.Insert(comboIdx, _table.GetType().GetProperty(_fieldName).GetValue(_table));
+                _comboBox.SelectedIndex = comboIdx;                
+            };
+
             _comboBox.Disposed += delegate (object sender, EventArgs e)
             {
                 comboBoxBufferIdxMap.Remove(_comboBox);
                 comboBoxesWithECTableFieldItemBinding.Remove(_comboBox);
             };
            
+        }
+
+        public static void SetECTableFieldTextBinding(this ComboBox _comboBox, ECTable _table, string _fieldName)
+        {
+            if (comboBoxesWithECTableFieldTextBinding.Contains(_comboBox))
+            {
+                throw new ECBindingAlreadyExistsException(_comboBox);
+            }
+
+            comboBoxesWithECTableFieldTextBinding.Add(_comboBox);
+
+            _table.OnChanged += delegate (object sender, ECTable _callerTable)
+            {
+                PropertyInfo p = _callerTable.GetType().GetProperty(_fieldName);
+                _comboBox.Text = p.GetValue(_callerTable).ToString();
+            };
+
+            _table.OnAfterFindSet += delegate (object sender, ECTable _callerTable)
+            {
+                PropertyInfo p = _callerTable.GetType().GetProperty(_fieldName);
+                _comboBox.Text = p.GetValue(_callerTable).ToString();
+            };
+
+            _comboBox.Disposed += delegate (object sender, EventArgs a)
+            {
+                comboBoxesWithECTableFieldTextBinding.Remove(_comboBox);
+            };
+
         }
     }
 }
