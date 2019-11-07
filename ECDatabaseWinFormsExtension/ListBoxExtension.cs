@@ -63,7 +63,7 @@ namespace ECDatabaseWinFormsExtension
         public static void GetSelectedRecord(this ListBox _listBox, ECTable _table)
         {            
             _table.Clear();
-            _table.SetCurrentBufferIndex(listBoxBufferIdxMap[_listBox][_listBox.SelectedIndex]);                
+            _table.SetCurentBufferIndex(listBoxBufferIdxMap[_listBox][_listBox.SelectedIndex]);                
         }
 
         /// <summary>
@@ -104,7 +104,7 @@ namespace ECDatabaseWinFormsExtension
 
             _table.OnAfterModify += delegate (object sender, ECTable _callerTable)
             {                
-                int listIdx = listBoxBufferIdxMap[_listBox].First(x => x.Value == _callerTable.GetCurrentBufferIndex()).Key;
+                int listIdx = listBoxBufferIdxMap[_listBox].First(x => x.Value == _callerTable.GetCurentBufferIndex()).Key;
                 _listBox.Items[listIdx] = p.GetValue(_callerTable);            
             };
 
@@ -115,7 +115,7 @@ namespace ECDatabaseWinFormsExtension
 
             _table.OnChanged += delegate (object sender, ECTable _callerTable)
             {                
-                int listIdx = listBoxBufferIdxMap[_listBox].First(x => x.Value == _callerTable.GetCurrentBufferIndex()).Key;
+                int listIdx = listBoxBufferIdxMap[_listBox].First(x => x.Value == _callerTable.GetCurentBufferIndex()).Key;
                 _listBox.Items.RemoveAt(listIdx);
                 _listBox.Items.Insert(listIdx, _table.GetType().GetProperty(_fieldName).GetValue(_table));
                 _listBox.SelectedIndex = listIdx;

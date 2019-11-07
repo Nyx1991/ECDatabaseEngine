@@ -61,7 +61,7 @@ namespace ECDatabaseWinFormsExtension
         public static void GetSelectedRecord(this ComboBox _comboBox, ECTable _table)
         {            
             _table.Clear();
-            _table.SetCurrentBufferIndex(comboBoxBufferIdxMap[_comboBox][_comboBox.SelectedIndex]);                
+            _table.SetCurentBufferIndex(comboBoxBufferIdxMap[_comboBox][_comboBox.SelectedIndex]);                
         }
 
         /// <summary>
@@ -103,7 +103,7 @@ namespace ECDatabaseWinFormsExtension
 
             _table.OnAfterModify += delegate (object sender, ECTable _callerTable)
             {
-                int comboIdx = comboBoxBufferIdxMap[_comboBox].First( x => x.Value == _callerTable.GetCurrentBufferIndex()).Key;
+                int comboIdx = comboBoxBufferIdxMap[_comboBox].First( x => x.Value == _callerTable.GetCurentBufferIndex()).Key;
                 _comboBox.Items[comboIdx] = p.GetValue(_callerTable);
             };
             
@@ -114,7 +114,7 @@ namespace ECDatabaseWinFormsExtension
 
             _table.OnChanged += delegate (object sender, ECTable _callerTable)
             {
-                int comboIdx = comboBoxBufferIdxMap[_comboBox].First(x => x.Value == _callerTable.GetCurrentBufferIndex()).Key;
+                int comboIdx = comboBoxBufferIdxMap[_comboBox].First(x => x.Value == _callerTable.GetCurentBufferIndex()).Key;
                 _comboBox.Items.RemoveAt(comboIdx);
                 _comboBox.Items.Insert(comboIdx, _table.GetType().GetProperty(_fieldName).GetValue(_table));
                 _comboBox.SelectedIndex = comboIdx;                

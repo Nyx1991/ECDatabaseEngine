@@ -35,8 +35,20 @@ namespace WinFormsTest
             txtStreet.SetECTableFieldTextBinding(address, nameof(address.Street));
             txtRecIdAddress.SetECTableFieldTextBinding(address, nameof(address.RecId));
 
-            personGrid.SetECTableDataBinding(person);
-            addressGrid.SetECTableDataBinding(address_Grid);
+            personGrid.SetECTableDataBinding(person, FieldFilter.HideGivenFields, nameof(person.RecId));
+            personGrid.AddDataFromECTable(address, FieldFilter.ShowGivenFields, nameof(address.City), nameof(address.Street));
+
+            addressGrid.SetECTableDataBinding(address);
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            person.ModifyAll();            
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            person.FindSet();
         }
     }
 }

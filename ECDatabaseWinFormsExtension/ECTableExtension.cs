@@ -11,6 +11,11 @@ namespace ECDatabaseWinFormsExtension
 {
     public static class ECTableExtension
     {
+        /// <summary>
+        /// Transfers the data of a DataGridViewRow into the table buffer
+        /// </summary>
+        /// <param name="_table">ECTable instance</param>
+        /// <param name="_row">DataGridViewRow the data should be copied from</param>
         public static void CopyFromDataGridViewRow(this ECTable _table, DataGridViewRow _row)
         {
             foreach (PropertyInfo p in _table.GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute))))

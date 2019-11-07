@@ -20,23 +20,26 @@ namespace ECDatabaseEngine
         private Dictionary<string, KeyValuePair<string, string>> ranges;
         private List<string> order;
         private List<ECJoin> joins;
+        private Guid guid;
+        private int curRecIdx;
+        private int curRecIdxEnumerator;
 
         internal List<ECTable> Records => records;
         internal Dictionary<string, string> Filter => filter;
         internal Dictionary<string, KeyValuePair<string, string>> Ranges => ranges;
         internal List<string> Order => order;
-        internal List<ECJoin> Joins => joins;
-
+        internal List<ECJoin> Joins => joins;        
 
         /// <summary>
         /// Determines in which order the records should be loaded.
         /// Use AddOrderBy(_fieldName) to add fields you want the records to be orderd after
         /// </summary>
         public OrderType OrderType { get; set; }
-        internal string SqlTableName { get => "`" + TableName + "`"; }
-        
-        int currRecIdx;
-        int currRecIdxEnumerator;
+        /// <summary>
+        /// True, if the table is part of a join and is not the parent table
+        /// </summary>
+        public bool IsJoined { get; private set; }        
+        internal string SqlTableName { get => "`" + TableName + "`"; }                
 
         #region EventHandler
         /// <summary>
@@ -120,8 +123,9 @@ namespace ECDatabaseEngine
             else
                 records = new List<ECTable>();
 
-            currRecIdx = 0;
-            currRecIdxEnumerator = -1;
+            guid = Guid.NewGuid();
+            curRecIdx = 0;
+            curRecIdxEnumerator = -1;
             filter = new Dictionary<string, string>();
             ranges = new Dictionary<string, KeyValuePair<string, string>>();
             joins = new List<ECJoin>();
@@ -154,8 +158,8 @@ namespace ECDatabaseEngine
         /// </summary>
         public void Reset()
         {
-            InvokeMethodeOnJoinedTables("Reset");
-            currRecIdxEnumerator = -1;                        
+            InvokeMethodeOnJoinedTables(nameof(Reset));
+            curRecIdxEnumerator = -1;                        
         }
 
         /// <summary>
@@ -201,6 +205,8 @@ namespace ECDatabaseEngine
             if (GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute)) && x.Name == _foreignKey).Count() == 0)
                 throw new ECFieldNotFoundException("Field '" + _foreignKey + "' not found in table '" + TableName + "'");
 
+            _table.IsJoined = true;
+
             ECJoin join = new ECJoin();
             join.JoinType = _joinType;
             join.OnSourceField = _foreignKey;
@@ -223,6 +229,7 @@ namespace ECDatabaseEngine
             if (_table.GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute)) && x.Name == _onTargetField).Count() == 0)
                 throw new ECFieldNotFoundException("Field '" + _onTargetField + "' not found in table '" + _table.TableName + "'");
 
+            _table.IsJoined = true;
 
             ECJoin join = new ECJoin();
             join.JoinType = _joinType;
@@ -232,6 +239,26 @@ namespace ECDatabaseEngine
             joins.Add(join);
         }
 
+        /// <summary>
+        /// True if the given table occures within this tables joined tables
+        /// </summary>
+        /// <param name="_table">The table that should be looked after in joined tables</param>
+        /// <returns></returns>
+        public bool IsJoinedTable(ECTable _table)
+        {
+            if (joins.Count == 0)
+            {
+                return this.Equals(_table);
+            }
+            else
+            {
+                foreach (ECJoin j in joins)
+                {
+                    return j.Table.IsJoinedTable(_table);
+                }
+            }
+            return false;
+        }
         #endregion
 
         #region GetData
@@ -247,19 +274,19 @@ namespace ECDatabaseEngine
             if (records.Count == 0)
                 return ret;            
             
-            if (currRecIdx >= records.Count - 1) //Here we stand at the last record
+            if (curRecIdx >= records.Count - 1) //Here we stand at the last record
             {
-                currRecIdx = 0;
+                curRecIdx = 0;
                 ret = false;
             }
             else
             {
-                currRecIdx++;
+                curRecIdx++;
                 ret = true;
             }
             
-            CopyFrom(records[currRecIdx], false);            
-            InvokeMethodeOnJoinedTables("Next");
+            CopyFrom(records[curRecIdx], false);            
+            InvokeMethodeOnJoinedTables(nameof(Next));
             if (_invokeEvents)
             { 
                 OnChanged?.Invoke(this, this);
@@ -274,14 +301,14 @@ namespace ECDatabaseEngine
         {
             if (records.Count > 0)
             {
-                currRecIdx = records.Count - 1;
+                curRecIdx = records.Count - 1;
             }
             else
             {
-                currRecIdx = 0;
+                curRecIdx = 0;
             }            
-            CopyFrom(records[currRecIdx], false);
-            InvokeMethodeOnJoinedTables("Last");
+            CopyFrom(records[curRecIdx], false);
+            InvokeMethodeOnJoinedTables(nameof(Last));
             OnChanged?.Invoke(this, this);
         }
 
@@ -290,9 +317,9 @@ namespace ECDatabaseEngine
         /// </summary>
         public void First()
         {
-            currRecIdx = 0;
-            CopyFrom(records[currRecIdx], false);
-            InvokeMethodeOnJoinedTables("First");
+            curRecIdx = 0;
+            CopyFrom(records[curRecIdx], false);
+            InvokeMethodeOnJoinedTables(nameof(First));
             OnChanged?.Invoke(this, this);
         }       
 
@@ -405,19 +432,19 @@ namespace ECDatabaseEngine
             OnBeforeDelete?.Invoke(this, this);
             if (records.Count == 0)
             {
-                currRecIdx = 0;
+                curRecIdx = 0;
                 Init();
             }
             else
             {
-                if (currRecIdx == records.Count - 1)
+                if (curRecIdx == records.Count - 1)
                 {
-                    currRecIdx--;
+                    curRecIdx--;
                 }
-                recIdx = currRecIdx;
+                recIdx = curRecIdx;
                 ECDatabaseConnection.Connection.Delete(this);
                 FindSet();
-                SetCurrentBufferIndex(recIdx);
+                SetCurentBufferIndex(recIdx);
                 OnChanged?.Invoke(this, this);
             }
             OnAfterDelete?.Invoke(this, this);           
@@ -445,7 +472,7 @@ namespace ECDatabaseEngine
         {
             OnBeforeModify?.Invoke(this, this);
             ECDatabaseConnection.Connection.Modify(this);
-            records[currRecIdx].CopyFrom(this);
+            records[curRecIdx].CopyFrom(this);
             OnAfterModify?.Invoke(this, this);
         }
 
@@ -458,27 +485,27 @@ namespace ECDatabaseEngine
             {
                 ECDatabaseConnection.Connection.Modify(records[i]);
             }
-            records[currRecIdx].CopyFrom(this);
+            records[curRecIdx].CopyFrom(this);
         }
 
         /// <summary>
         /// Returns the position of the current record in the loaded dataset
         /// </summary>
         /// <returns>Index of the current record</returns>
-        public int GetCurrentBufferIndex()
+        public int GetCurentBufferIndex()
         {
-            return currRecIdx;
+            return curRecIdx;
         }
 
         /// <summary>
         /// Loads the record at the given position in the dataset
         /// </summary>
         /// <param name="_pos">Index of the record</param>
-        public void SetCurrentBufferIndex(int _pos)
+        public void SetCurentBufferIndex(int _pos)
         {
             if (records.Count == 0)
             {
-                currRecIdx = 0;
+                curRecIdx = 0;
                 Init();
                 return;
             }
@@ -486,11 +513,11 @@ namespace ECDatabaseEngine
             if (_pos > records.Count - 1)
                 throw new IndexOutOfRangeException();
 
-            records[currRecIdx].CopyFrom(this, false);
-            currRecIdx = _pos;
+            records[curRecIdx].CopyFrom(this, false);
+            curRecIdx = _pos;
 
-            CopyFrom(records[currRecIdx], false);
-            InvokeMethodeOnJoinedTables("SetCurrentBufferIndex", false, new object[] { _pos });
+            CopyFrom(records[curRecIdx], false);
+            InvokeMethodeOnJoinedTables(nameof(SetCurentBufferIndex), false, new object[] { _pos });
             OnChanged?.Invoke(this, this);
         }
 
@@ -700,22 +727,12 @@ namespace ECDatabaseEngine
             }
             else
             {
-                currRecIdx = 0;
+                curRecIdx = 0;
                 CopyFrom(records.First(), false);
             }
         }
 
-        #endregion
-
-        private void InvokeMethodeOnJoinedTables(string _method, bool _fillNullParms = true, object[] _params = null)
-        {
-            if (_params == null && _fillNullParms)
-                _params = new object[] { true };
-            foreach (ECJoin j in joins)
-            {
-                ((ECTable)j.Table).GetType().GetMethod(_method).Invoke(j.Table, _params);
-            }
-        }
+        #endregion        
 
         #region Interface
 
@@ -729,18 +746,18 @@ namespace ECDatabaseEngine
             if (records.Count == 0)
                 return ret;
 
-            if (currRecIdxEnumerator >= records.Count - 1) //Here we stand at the last record
+            if (curRecIdxEnumerator >= records.Count - 1) //Here we stand at the last record
             {
-                currRecIdxEnumerator = -1;
+                curRecIdxEnumerator = -1;
                 ret = false;
             }
             else
             {
-                currRecIdxEnumerator++;
+                curRecIdxEnumerator++;
                 ret = true;
             }
 
-            InvokeMethodeOnJoinedTables("MoveNext", false);
+            InvokeMethodeOnJoinedTables(nameof(MoveNext), false);
             return ret;
         }
 
@@ -753,7 +770,7 @@ namespace ECDatabaseEngine
             {
                 ECTable dummy = (ECTable)Activator.CreateInstance(this.GetType());
 
-                dummy.CopyFrom(records[currRecIdxEnumerator], false);
+                dummy.CopyFrom(records[curRecIdxEnumerator], false);
                 dummy.joins = new List<ECJoin>();
 
                 foreach (ECJoin j in this.joins)
@@ -780,24 +797,8 @@ namespace ECDatabaseEngine
         /// <param name="_other">Table to which this table should be compared to.</param>
         /// <returns>True: if both RecIds are the same. False: If not so.</returns>
         public bool Equals(ECTable _other)
-        {            
-            if (this.GetType() != _other.GetType())
-                return false;
-
-            foreach (PropertyInfo p in this.GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute))))
-            {
-                if (!_other.GetType().GetProperties().Contains(p))
-                    return false;
-
-                Console.WriteLine(p.GetValue(this));
-                Console.WriteLine(p.GetValue(_other));
-
-                if (!p.GetValue(this).Equals(p.GetValue(_other)))
-                    return false;
-                
-            }
-
-            return true;
+        {
+            return _other.guid.Equals(this.guid);
         }
 
         /// <summary>
@@ -824,6 +825,16 @@ namespace ECDatabaseEngine
             return ret.Substring(0, ret.Length - 2);
         }
         #endregion
-        
+
+        private void InvokeMethodeOnJoinedTables(string _method, bool _fillNullParms = true, object[] _params = null)
+        {
+            if (_params == null && _fillNullParms)
+                _params = new object[] { true };
+            foreach (ECJoin j in joins)
+            {
+                ((ECTable)j.Table).GetType().GetMethod(_method).Invoke(j.Table, _params);
+            }
+        }
+
     }
 }

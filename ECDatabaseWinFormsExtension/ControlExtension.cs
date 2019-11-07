@@ -35,6 +35,8 @@ namespace ECDatabaseWinFormsExtension
 
             controlsWithECTableFieldTextBinding.Add(_control);
 
+            _control.Enabled = !_table.IsJoined;
+
             _table.OnChanged += delegate (object sender, ECTable _callerTable)
             {
                 PropertyInfo p = _callerTable.GetType().GetProperty(_fieldName);
