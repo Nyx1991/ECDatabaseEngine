@@ -9,63 +9,67 @@
             Abstract table class. Use this class as a base for your tables.
             </summary>
         </member>
-        <member name="F:ECDatabaseEngine.ECTable.records">
-            <summary>
-            Internal list which is used to store all loaded records.
-            The records are stored as ECTable instances itself.
-            </summary>
-        </member>
         <member name="P:ECDatabaseEngine.ECTable.OrderType">
             <summary>
             Determines in which order the records should be loaded.
             Use AddOrderBy(_fieldName) to add fields you want the records to be orderd after
             </summary>
         </member>
-        <member name="F:ECDatabaseEngine.ECTable.OnBeforeInsert">
+        <member name="P:ECDatabaseEngine.ECTable.IsJoined">
+            <summary>
+            True, if the table is part of a join and is not the parent table
+            </summary>
+        </member>
+        <member name="E:ECDatabaseEngine.ECTable.OnBeforeInsert">
             <summary>
             Invoked before a new record will be inserted an written to the database.
             </summary>
         </member>
-        <member name="F:ECDatabaseEngine.ECTable.OnAfterInsert">
+        <member name="E:ECDatabaseEngine.ECTable.OnAfterInsert">
             <summary>
             Invoked after a new record has been inserted and written to the database.
             </summary>
         </member>
-        <member name="F:ECDatabaseEngine.ECTable.OnBeforeModify">
+        <member name="E:ECDatabaseEngine.ECTable.OnBeforeModify">
             <summary>
             Invoked before all changes on the current record will be written to the database.
             </summary>
         </member>
-        <member name="F:ECDatabaseEngine.ECTable.OnAfterModify">
+        <member name="E:ECDatabaseEngine.ECTable.OnAfterModify">
             <summary>
             Invoked after all changes has been written to the database.
             </summary>
         </member>
-        <member name="F:ECDatabaseEngine.ECTable.OnBeforeDelete">
+        <member name="E:ECDatabaseEngine.ECTable.OnBeforeDelete">
             <summary>
             Invoked before the current record will be deleted from the database.
             </summary>
         </member>
-        <member name="F:ECDatabaseEngine.ECTable.OnAfterDelete">
+        <member name="E:ECDatabaseEngine.ECTable.OnAfterDelete">
             <summary>
             Invoked after the current record has been deleted from the database.
             </summary>
         </member>
-        <member name="F:ECDatabaseEngine.ECTable.OnChanged">
+        <member name="E:ECDatabaseEngine.ECTable.OnChanged">
             <summary>
             Invoked after a new record has been loaded.
             Can be used to keep UI up to date, for example.
+            </summary>
+        </member>
+        <member name="E:ECDatabaseEngine.ECTable.OnBeforeFindSet">
+            <summary>
+            Invoked before the FindSet-Method has been called. Can be used to determine if the whole data in the table will be changed.
+            </summary>
+        </member>
+        <member name="E:ECDatabaseEngine.ECTable.OnAfterFindSet">
+            <summary>
+            Invoked after the FindSet-Method has been called. Can be used to determine if the whole data in the table has changed.
             </summary>
         </member>
         <member name="P:ECDatabaseEngine.ECTable.RecId">
             <summary>
             Ongoing primary key of the table.
             This is a unique identifier (table scope).
-            </summary>
-        </member>
-        <member name="P:ECDatabaseEngine.ECTable.Current">
-            <summary>
-            IEnumerator implementation. Returns the current record.
             </summary>
         </member>
         <member name="P:ECDatabaseEngine.ECTable.Count">
@@ -104,7 +108,7 @@
             In other words: unload all records.
             </summary>
         </member>
-        <member name="M:ECDatabaseEngine.ECTable.JoinedTable``1">
+        <member name="M:ECDatabaseEngine.ECTable.GetJoinedTable``1">
             <summary>
             Get the instance of a table you Joined before.
             Make sure to use a subclass of ECTable.
@@ -117,8 +121,8 @@
             Join a table. You can only join a table once per type.
             </summary>
             <param name="_table">Instance of the table you want to join.</param>
-            <param name="_onSourceField">The field on this table to which the join should be connected to.
-            In the other table it will be the RecId. (Join someTable ON thisTable.SourceField=_table.RecId)</param>
+            <param name="_foreignKey">Field that represents the foreign key.
+            In the other table it will be the RecId be default. (Join someTable ON thisTable.ForeignKey=_table.RecId)</param>
             <param name="_joinType">INNER, LEFT OUTER or RIGHT OUTER</param>
         </member>
         <member name="M:ECDatabaseEngine.ECTable.AddJoin(ECDatabaseEngine.ECTable,System.String,System.String,ECDatabaseEngine.ECJoinType)">
@@ -126,15 +130,23 @@
             Join a table. You can only join a table once per type.
             </summary>
             <param name="_table">Instance of the table you want to join.</param>
-            <param name="_onSourceField">The field on this table to which the join should be connected to.</param>
+            <param name="_foreignKey">Field that represents the foreign key</param>
             <param name="_onTargetField">The field on the other table to which the join should be connected to.
-            In the other table it will be the RecId. (Join someTable ON thisTable.SourceField=_table.TargetField)</param>
+            (Join someTable ON thisTable.SourceField=_table.TargetField)</param>
             <param name="_joinType">INNER, LEFT OUTER or RIGHT OUTER</param>
         </member>
-        <member name="M:ECDatabaseEngine.ECTable.Next">
+        <member name="M:ECDatabaseEngine.ECTable.IsJoinedTable(ECDatabaseEngine.ECTable)">
+            <summary>
+            True if the given table occures within this tables joined tables
+            </summary>
+            <param name="_table">The table that should be looked after in joined tables</param>
+            <returns></returns>
+        </member>
+        <member name="M:ECDatabaseEngine.ECTable.Next(System.Boolean)">
             <summary>
             Get the next record
             </summary>
+            <param name="_invokeEvents">False: Events will not be invoked. Default: True</param>
             <returns>True if a record was found. False if no more record was found</returns>
         </member>
         <member name="M:ECDatabaseEngine.ECTable.Last">
@@ -147,16 +159,11 @@
             Get the firs record
             </summary>
         </member>
-        <member name="M:ECDatabaseEngine.ECTable.MoveNext">
-            <summary>
-            IEnumerable implementation.
-            </summary>
-            <returns>True: Some more records to come. False: No more records to come.</returns>
-        </member>
         <member name="M:ECDatabaseEngine.ECTable.FindSet(System.Boolean)">
             <summary>
             Load records from database.
             </summary>
+            <param name="_invokeEvents">False: Events will not be invoked. Default: True</param>
         </member>
         <member name="M:ECDatabaseEngine.ECTable.Get(System.Int32)">
             <summary>
@@ -208,22 +215,22 @@
             Has no impact on joined tables.
             </summary>
         </member>
-        <member name="M:ECDatabaseEngine.ECTable.GetRecPos">
+        <member name="M:ECDatabaseEngine.ECTable.ModifyAll">
+            <summary>
+            Writes all records in the buffer to the database
+            </summary>
+        </member>
+        <member name="M:ECDatabaseEngine.ECTable.GetCurentBufferIndex">
             <summary>
             Returns the position of the current record in the loaded dataset
             </summary>
             <returns>Index of the current record</returns>
         </member>
-        <member name="M:ECDatabaseEngine.ECTable.SetRecPos(System.Int32)">
+        <member name="M:ECDatabaseEngine.ECTable.SetCurentBufferIndex(System.Int32)">
             <summary>
             Loads the record at the given position in the dataset
             </summary>
             <param name="_pos">Index of the record</param>
-        </member>
-        <member name="M:ECDatabaseEngine.ECTable.ModifyAll">
-            <summary>
-            Writes all records to the database
-            </summary>
         </member>
         <member name="M:ECDatabaseEngine.ECTable.SynchronizeSchema">
             <summary>
@@ -231,18 +238,13 @@
             Important: This can lead to data loss.
             </summary>
         </member>
-        <member name="M:ECDatabaseEngine.ECTable.CopyFrom(ECDatabaseEngine.ECTable)">
+        <member name="M:ECDatabaseEngine.ECTable.CopyFrom(ECDatabaseEngine.ECTable,System.Boolean)">
             <summary>
             Copy the content of all fields from the currently active record of a given tabel
             to the currently active record of this table
             </summary>
             <param name="_table">Table from which the data should be copied</param>
-        </member>
-        <member name="M:ECDatabaseEngine.ECTable.CopyFromSilent(ECDatabaseEngine.ECTable)">
-            <summary>
-            Behaves like CopyFrom. Just doesnt invoke the OnChange event
-            </summary>
-            <param name="_table">Table from which the data should be copied</param>
+            <param name="_invokeOnChangeEvent">True: OnChange Event will be invoked if function is called. False: OnChange Event will not be invoked</param>
         </member>
         <member name="M:ECDatabaseEngine.ECTable.DateTimeToSqlDate(System.DateTime)">
             <summary>
@@ -257,6 +259,17 @@
             </summary>
             <param name="_dt">DateTime to be converted.></param>
             <returns>String with date-time in SQL format</returns>
+        </member>
+        <member name="M:ECDatabaseEngine.ECTable.MoveNext">
+            <summary>
+            IEnumerable implementation.
+            </summary>
+            <returns>True: Some more records to come. False: No more records to come.</returns>
+        </member>
+        <member name="P:ECDatabaseEngine.ECTable.Current">
+            <summary>
+            IEnumerator implementation. Returns the current record.
+            </summary>
         </member>
         <member name="M:ECDatabaseEngine.ECTable.Equals(ECDatabaseEngine.ECTable)">
             <summary>

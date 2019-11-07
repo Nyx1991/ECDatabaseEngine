@@ -14,58 +14,72 @@ namespace ECDatabaseEngine
     /// </summary>
     public abstract class ECTable : IEnumerator, IEnumerable, IEquatable<ECTable>
     {
-        /// <summary>
-        /// Internal list which is used to store all loaded records.
-        /// The records are stored as ECTable instances itself.
-        /// </summary>
-        protected List<ECTable> records;
+        
+        private List<ECTable> records;
         private Dictionary<string, string> filter;
         private Dictionary<string, KeyValuePair<string, string>> ranges;
         private List<string> order;
-        
+        private List<ECJoin> joins;
+        private Guid guid;
+        private int curRecIdx;
+        private int curRecIdxEnumerator;
+
+        internal List<ECTable> Records => records;
+        internal Dictionary<string, string> Filter => filter;
+        internal Dictionary<string, KeyValuePair<string, string>> Ranges => ranges;
+        internal List<string> Order => order;
+        internal List<ECJoin> Joins => joins;        
+
         /// <summary>
         /// Determines in which order the records should be loaded.
         /// Use AddOrderBy(_fieldName) to add fields you want the records to be orderd after
         /// </summary>
         public OrderType OrderType { get; set; }
-        private string SqlTableName { get => "`" + TableName + "`."; }
-
-        private List<ECJoin> joins;
-
-        static int nextGlobalRecId = 0;
-        int globalRecId = 0;
-        int currentRecord;
+        /// <summary>
+        /// True, if the table is part of a join and is not the parent table
+        /// </summary>
+        public bool IsJoined { get; private set; }        
+        internal string SqlTableName { get => "`" + TableName + "`"; }                
 
         #region EventHandler
         /// <summary>
         /// Invoked before a new record will be inserted an written to the database.
         /// </summary>
-        public EventHandler<ECTable> OnBeforeInsert;
+        public event EventHandler<ECTable> OnBeforeInsert;
         /// <summary>
         /// Invoked after a new record has been inserted and written to the database.
         /// </summary>
-        public EventHandler<ECTable> OnAfterInsert;
+        public event EventHandler<ECTable> OnAfterInsert;
         /// <summary>
         /// Invoked before all changes on the current record will be written to the database.
         /// </summary>
-        public EventHandler<ECTable> OnBeforeModify;
+        public event EventHandler<ECTable> OnBeforeModify;
         /// <summary>
         /// Invoked after all changes has been written to the database.
         /// </summary>
-        public EventHandler<ECTable> OnAfterModify;
+        public event EventHandler<ECTable> OnAfterModify;
         /// <summary>
         /// Invoked before the current record will be deleted from the database.
         /// </summary>
-        public EventHandler<ECTable> OnBeforeDelete;        
+        public event EventHandler<ECTable> OnBeforeDelete;        
         /// <summary>
         /// Invoked after the current record has been deleted from the database.
         /// </summary>
-        public EventHandler<ECTable> OnAfterDelete;
+        public event EventHandler<ECTable> OnAfterDelete;
         /// <summary>
         /// Invoked after a new record has been loaded.
         /// Can be used to keep UI up to date, for example.
         /// </summary>
-        public EventHandler<ECTable> OnChanged;
+        public event EventHandler<ECTable> OnChanged;
+        /// <summary>
+        /// Invoked before the FindSet-Method has been called. Can be used to determine if the whole data in the table will be changed.
+        /// </summary>
+        public event EventHandler<ECTable> OnBeforeFindSet;
+        /// <summary>
+        /// Invoked after the FindSet-Method has been called. Can be used to determine if the whole data in the table has changed.
+        /// </summary>
+        public event EventHandler<ECTable> OnAfterFindSet;
+
         #endregion
 
         /// <summary>
@@ -76,11 +90,7 @@ namespace ECDatabaseEngine
         [NotNull]
         [PrimaryKey]
         [AutoIncrement]        
-        public int RecId { get; internal set; }
-        /// <summary>
-        /// IEnumerator implementation. Returns the current record.
-        /// </summary>
-        public object Current => records[currentRecord];
+        public int RecId { get; internal set; }        
         /// <summary>
         /// Record count.
         /// </summary>
@@ -97,6 +107,11 @@ namespace ECDatabaseEngine
             Init();            
         }
 
+        internal ECTable(Dictionary<string, string> _values) : this()
+        {
+            InitRecordFromDictionary(_values);
+        }
+
         #region Init/Reset/Clear
         /// <summary>
         /// Removes all filters and ranges and unloads all loaded Records. Initializes all Fields.
@@ -108,7 +123,9 @@ namespace ECDatabaseEngine
             else
                 records = new List<ECTable>();
 
-            currentRecord = 0;
+            guid = Guid.NewGuid();
+            curRecIdx = 0;
+            curRecIdxEnumerator = -1;
             filter = new Dictionary<string, string>();
             ranges = new Dictionary<string, KeyValuePair<string, string>>();
             joins = new List<ECJoin>();
@@ -141,10 +158,8 @@ namespace ECDatabaseEngine
         /// </summary>
         public void Reset()
         {
-            InvokeMethodeOnJoinedTables("Reset");
-            currentRecord = 0;
-            CopyFromSilent(records[0]);
-            OnChanged?.Invoke(this, this);
+            InvokeMethodeOnJoinedTables(nameof(Reset));
+            curRecIdxEnumerator = -1;                        
         }
 
         /// <summary>
@@ -167,7 +182,7 @@ namespace ECDatabaseEngine
         /// </summary>
         /// <typeparam name="T">Type of the joined table (ECTable subclass)</typeparam>
         /// <returns>Instance of the joined table with all records.</returns>
-        public T JoinedTable<T>()
+        public T GetJoinedTable<T>()
         {
             try
             {
@@ -182,17 +197,19 @@ namespace ECDatabaseEngine
         /// Join a table. You can only join a table once per type.
         /// </summary>
         /// <param name="_table">Instance of the table you want to join.</param>
-        /// <param name="_onSourceField">The field on this table to which the join should be connected to.
-        /// In the other table it will be the RecId. (Join someTable ON thisTable.SourceField=_table.RecId)</param>
+        /// <param name="_foreignKey">Field that represents the foreign key.
+        /// In the other table it will be the RecId be default. (Join someTable ON thisTable.ForeignKey=_table.RecId)</param>
         /// <param name="_joinType">INNER, LEFT OUTER or RIGHT OUTER</param>
-        public void AddJoin(ECTable _table, string _onSourceField, ECJoinType _joinType)
+        public void AddJoin(ECTable _table, string _foreignKey, ECJoinType _joinType)
         {
-            if (GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute)) && x.Name == _onSourceField).Count() == 0)
-                throw new ECFieldNotFoundException("Field '" + _onSourceField + "' not found in table '" + TableName + "'");
+            if (GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute)) && x.Name == _foreignKey).Count() == 0)
+                throw new ECFieldNotFoundException("Field '" + _foreignKey + "' not found in table '" + TableName + "'");
+
+            _table.IsJoined = true;
 
             ECJoin join = new ECJoin();
             join.JoinType = _joinType;
-            join.OnSourceField = _onSourceField;
+            join.OnSourceField = _foreignKey;
             join.Table = _table;
             joins.Add(join);
         }
@@ -200,27 +217,48 @@ namespace ECDatabaseEngine
         /// Join a table. You can only join a table once per type.
         /// </summary>
         /// <param name="_table">Instance of the table you want to join.</param>
-        /// <param name="_onSourceField">The field on this table to which the join should be connected to.</param>
+        /// <param name="_foreignKey">Field that represents the foreign key</param>
         /// <param name="_onTargetField">The field on the other table to which the join should be connected to.
-        /// In the other table it will be the RecId. (Join someTable ON thisTable.SourceField=_table.TargetField)</param>
+        /// (Join someTable ON thisTable.SourceField=_table.TargetField)</param>
         /// <param name="_joinType">INNER, LEFT OUTER or RIGHT OUTER</param>
-        public void AddJoin(ECTable _table, string _onSourceField, string _onTargetField, ECJoinType _joinType)
+        public void AddJoin(ECTable _table, string _foreignKey, string _onTargetField, ECJoinType _joinType)
         {
-            if (GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute)) && x.Name == _onSourceField).Count() == 0)
-                throw new ECFieldNotFoundException("Field '" + _onSourceField + "' not found in table '" + TableName + "'");
+            if (GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute)) && x.Name == _foreignKey).Count() == 0)
+                throw new ECFieldNotFoundException("Field '" + _foreignKey + "' not found in table '" + TableName + "'");
 
             if (_table.GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute)) && x.Name == _onTargetField).Count() == 0)
                 throw new ECFieldNotFoundException("Field '" + _onTargetField + "' not found in table '" + _table.TableName + "'");
 
+            _table.IsJoined = true;
 
             ECJoin join = new ECJoin();
             join.JoinType = _joinType;
             join.OnTargetField = _onTargetField;
-            join.OnSourceField = _onSourceField;
+            join.OnSourceField = _foreignKey;
             join.Table = _table;
             joins.Add(join);
         }
 
+        /// <summary>
+        /// True if the given table occures within this tables joined tables
+        /// </summary>
+        /// <param name="_table">The table that should be looked after in joined tables</param>
+        /// <returns></returns>
+        public bool IsJoinedTable(ECTable _table)
+        {
+            if (joins.Count == 0)
+            {
+                return this.Equals(_table);
+            }
+            else
+            {
+                foreach (ECJoin j in joins)
+                {
+                    return j.Table.IsJoinedTable(_table);
+                }
+            }
+            return false;
+        }
         #endregion
 
         #region GetData
@@ -228,28 +266,31 @@ namespace ECDatabaseEngine
         /// <summary>
         /// Get the next record
         /// </summary>
+        /// <param name="_invokeEvents">False: Events will not be invoked. Default: True</param>
         /// <returns>True if a record was found. False if no more record was found</returns>
-        public bool Next()
+        public bool Next(bool _invokeEvents = true)
         {
-            if (records.Count == 0)
-                return false;
-            records[currentRecord].CopyFromSilent(this);
             bool ret = false;
             if (records.Count == 0)
-                return false;
-            else if (currentRecord >= records.Count - 1)
+                return ret;            
+            
+            if (curRecIdx >= records.Count - 1) //Here we stand at the last record
             {
-                currentRecord = 0;
+                curRecIdx = 0;
                 ret = false;
             }
             else
             {
-                currentRecord++;
+                curRecIdx++;
                 ret = true;
             }
-            CopyFromSilent(records[currentRecord]);
-            InvokeMethodeOnJoinedTables("Next");
-            OnChanged?.Invoke(this, this);
+            
+            CopyFrom(records[curRecIdx], false);            
+            InvokeMethodeOnJoinedTables(nameof(Next));
+            if (_invokeEvents)
+            { 
+                OnChanged?.Invoke(this, this);
+            }
             return ret;
         }
 
@@ -260,14 +301,14 @@ namespace ECDatabaseEngine
         {
             if (records.Count > 0)
             {
-                currentRecord = records.Count - 1;
+                curRecIdx = records.Count - 1;
             }
             else
             {
-                currentRecord = 0;
-            }
-            CopyFromSilent(records[currentRecord]);
-            InvokeMethodeOnJoinedTables("Last");
+                curRecIdx = 0;
+            }            
+            CopyFrom(records[curRecIdx], false);
+            InvokeMethodeOnJoinedTables(nameof(Last));
             OnChanged?.Invoke(this, this);
         }
 
@@ -276,29 +317,30 @@ namespace ECDatabaseEngine
         /// </summary>
         public void First()
         {
-            currentRecord = 0;
-            CopyFromSilent(records[currentRecord]);
-            InvokeMethodeOnJoinedTables("First");
+            curRecIdx = 0;
+            CopyFrom(records[curRecIdx], false);
+            InvokeMethodeOnJoinedTables(nameof(First));
             OnChanged?.Invoke(this, this);
-        }
-
-        /// <summary>
-        /// IEnumerable implementation.
-        /// </summary>
-        /// <returns>True: Some more records to come. False: No more records to come.</returns>
-        public bool MoveNext()
-        {
-            return Next();
-        }
+        }       
 
         /// <summary>
         /// Load records from database.
         /// </summary>
-        public void FindSet(bool _invokeEvent = true)
-        {
+        /// <param name="_invokeEvents">False: Events will not be invoked. Default: True</param>
+        public void FindSet(bool _invokeEvents = true)
+        {   
+            if (_invokeEvents)
+            {
+                OnBeforeFindSet?.Invoke(this, this);
+            }
+
             InitTableDataFromDictionaryList(ECDatabaseConnection.Connection.GetData(this, filter, ranges, order));
-            if (_invokeEvent)
+
+            if (_invokeEvents)
+            { 
                 OnChanged?.Invoke(this, this);
+                OnAfterFindSet?.Invoke(this, this);
+            }
         }
 
         #endregion
@@ -310,6 +352,7 @@ namespace ECDatabaseEngine
         /// <param name="_recId">RecId of the record</param>
         public void Get(int _recId)
         {
+            Init();
             filter = new Dictionary<string, string>();
             filter.Add("RecId", _recId.ToString());
             InitTableDataFromDictionaryList(ECDatabaseConnection.Connection.GetData(this, filter,
@@ -374,8 +417,7 @@ namespace ECDatabaseEngine
         {
             OnBeforeInsert?.Invoke(this, this);
             RecId = ECDatabaseConnection.Connection.Insert(this);
-            Get(RecId);
-            Clear();
+            Get(RecId);            
             OnAfterInsert?.Invoke(this, this);
         }
 
@@ -385,15 +427,24 @@ namespace ECDatabaseEngine
         /// </summary>
         public void Delete()
         {
+            int recIdx;
+
             OnBeforeDelete?.Invoke(this, this);
             if (records.Count == 0)
             {
-                currentRecord = 0;
+                curRecIdx = 0;
                 Init();
             }
             else
             {
+                if (curRecIdx == records.Count - 1)
+                {
+                    curRecIdx--;
+                }
+                recIdx = curRecIdx;
                 ECDatabaseConnection.Connection.Delete(this);
+                FindSet();
+                SetCurentBufferIndex(recIdx);
                 OnChanged?.Invoke(this, this);
             }
             OnAfterDelete?.Invoke(this, this);           
@@ -421,46 +472,53 @@ namespace ECDatabaseEngine
         {
             OnBeforeModify?.Invoke(this, this);
             ECDatabaseConnection.Connection.Modify(this);
-            records[currentRecord] = this;
+            records[curRecIdx].CopyFrom(this);
             OnAfterModify?.Invoke(this, this);
+        }
+
+        /// <summary>
+        /// Writes all records in the buffer to the database
+        /// </summary>
+        public void ModifyAll()
+        {            
+            for (int i = 0; i < records.Count; i++)
+            {
+                ECDatabaseConnection.Connection.Modify(records[i]);
+            }
+            records[curRecIdx].CopyFrom(this);
         }
 
         /// <summary>
         /// Returns the position of the current record in the loaded dataset
         /// </summary>
         /// <returns>Index of the current record</returns>
-        public int GetRecPos()
+        public int GetCurentBufferIndex()
         {
-            return currentRecord;
+            return curRecIdx;
         }
 
         /// <summary>
         /// Loads the record at the given position in the dataset
         /// </summary>
         /// <param name="_pos">Index of the record</param>
-        public void SetRecPos(int _pos)
+        public void SetCurentBufferIndex(int _pos)
         {
+            if (records.Count == 0)
+            {
+                curRecIdx = 0;
+                Init();
+                return;
+            }
+            
             if (_pos > records.Count - 1)
                 throw new IndexOutOfRangeException();
 
-            records[currentRecord].CopyFromSilent(this);
-            currentRecord = _pos;
+            records[curRecIdx].CopyFrom(this, false);
+            curRecIdx = _pos;
 
-            CopyFromSilent(records[currentRecord]);
-            InvokeMethodeOnJoinedTables("SetRecPos", new object[] { _pos });
+            CopyFrom(records[curRecIdx], false);
+            InvokeMethodeOnJoinedTables(nameof(SetCurentBufferIndex), false, new object[] { _pos });
             OnChanged?.Invoke(this, this);
-        }
-
-        /// <summary>
-        /// Writes all records to the database
-        /// </summary>
-        public void ModifyAll()
-        {
-            FindSet();
-            do
-            {
-                Modify();
-            } while (Next());
         }
 
         /// <summary>
@@ -480,24 +538,18 @@ namespace ECDatabaseEngine
         /// to the currently active record of this table
         /// </summary>
         /// <param name="_table">Table from which the data should be copied</param>
-        public void CopyFrom(ECTable _table)
-        {
-            CopyFromSilent(_table);
-            OnChanged?.Invoke(this, this);
-        }
-
-        /// <summary>
-        /// Behaves like CopyFrom. Just doesnt invoke the OnChange event
-        /// </summary>
-        /// <param name="_table">Table from which the data should be copied</param>
-        protected void CopyFromSilent(ECTable _table)
+        /// <param name="_invokeOnChangeEvent">True: OnChange Event will be invoked if function is called. False: OnChange Event will not be invoked</param>
+        public void CopyFrom(ECTable _table, bool _invokeOnChangeEvent = true)
         {
             PropertyInfo targetPi;
             foreach (PropertyInfo sourcePi in _table.GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute))))
                 if ((targetPi = GetType().GetProperty(sourcePi.Name)) != null)
                     targetPi.SetValue(this, sourcePi.GetValue(_table));
-            globalRecId = _table.globalRecId;
+
+            if (_invokeOnChangeEvent)
+                OnChanged?.Invoke(this, this);
         }
+
         /// <summary>
         /// Convert a DateTime variable into the SQL date notation.
         /// </summary>
@@ -507,6 +559,7 @@ namespace ECDatabaseEngine
         {
             return String.Format("{0}-{1}-{2}", _dt.Year, _dt.Month, _dt.Day);
         }
+
         /// <summary>
         /// Convert a DateTime variable into the SQL date-time notation.
         /// </summary>
@@ -519,10 +572,6 @@ namespace ECDatabaseEngine
         #endregion
 
         #region Database helper functions
-        internal ECTable(Dictionary<string, string> _values) : this()
-        {
-            InitRecordFromDictionary(_values);
-        }
 
         internal string GetValueInSqlFormat(PropertyInfo _p)
         {
@@ -619,7 +668,7 @@ namespace ECDatabaseEngine
 
                 case FieldType.INT:
                     if (value == "")
-                        _p.SetValue(this, 0);
+                        _p.SetValue(this, 0);                    
                     else
                         _p.SetValue(this, Convert.ToInt32(value));
                     break;
@@ -664,10 +713,8 @@ namespace ECDatabaseEngine
             foreach (Dictionary<string, string> d in _dataDict)
             {
                 table = (ECTable)Activator.CreateInstance(this.GetType());
-                table.InitRecordFromDictionary(d);
-                table.globalRecId = nextGlobalRecId;
-                records.Add(table);
-                nextGlobalRecId++;
+                table.InitRecordFromDictionary(d);                
+                records.Add(table);                
             }
             foreach (ECJoin j in joins)
             {
@@ -680,254 +727,70 @@ namespace ECDatabaseEngine
             }
             else
             {
-                currentRecord = 0;
-                CopyFromSilent(records.First());
+                curRecIdx = 0;
+                CopyFrom(records.First(), false);
             }
         }
 
-        internal void GetParameterizedWhereClause(ref List<string> _where, ref Dictionary<string, string> _parameters)
-        {            
-            foreach (KeyValuePair<string, KeyValuePair<string, string>> kp in ranges)
-                if (kp.Value.Value.Equals(""))
-                {
-                    string keyParm = TableName + kp.Key;
-                    _parameters.Add(keyParm, kp.Value.Key);
-                    _where.Add(SqlTableName + kp.Key + "=@" + keyParm);
-                }
-                else
-                {
-                    string keyParm = TableName + kp.Key;
-                    _parameters.Add("K" + keyParm, kp.Value.Key);
-                    _parameters.Add("V" + keyParm, kp.Value.Value);
-                    _where.Add("(" + SqlTableName + kp.Key + " BETWEEN @K" + keyParm + " AND @V" + keyParm + ")");
-                }
-
-            foreach (KeyValuePair<string, string> kp in filter)
-            {
-                _where.Add(ParseFilterString(kp.Key, kp.Value, ref _parameters));
-            }
-
-            foreach (ECJoin j in joins)
-            {
-                ECTable joinTable = (ECTable)j.Table;
-                joinTable.GetParameterizedWhereClause(ref _where, ref _parameters);
-            }
-        }
-
-        internal string GetOrderByClause()
-        {
-            string ret = "";
-
-            foreach (string s in order)
-                ret += SqlTableName + s + ",";
-
-            foreach (ECJoin j in joins)
-            { 
-                ECTable joinTable = (ECTable)j.Table;
-                ret += joinTable.GetOrderByClause() + ",";
-            }            
-            if (ret.Length > 0)
-                return ret.Substring(0, ret.Length - 1);
-            else
-                return ret;
-        }
-
-        internal string ParseFilterString(string _fieldName, string _filter, ref Dictionary<string, string> _parameter)
-        {
-            string fieldName = "`" + _fieldName + "`";
-            string[] val = { "", "" };
-            int valId = 0;
-            bool foundPoint = false;
-            string clause = "("+fieldName;
-            string operators = "<>=";
-            for(int i=0; i<_filter.Length; i++)
-            {
-                switch (_filter[i])
-                {
-                    case '<':
-                        if (!foundPoint)
-                            clause += '<';
-                        else
-                        {
-                            clause += ProcessFromToOperator(i, val[valId % 2], val[valId + 1 % 2],
-                                                _filter[i - 1], ref _parameter);
-                            foundPoint = false;
-                            val[valId + 1 % 2] = "";
-                        }
-                        break;
-                    case '>':
-                        if (!foundPoint)
-                            clause += '>';
-                        else
-                        {
-                            clause += ProcessFromToOperator(i, val[valId % 2], val[valId + 1 % 2],
-                                                _filter[i - 1], ref _parameter);
-                            foundPoint = false;
-                            val[valId + 1 % 2] = "";
-                        }
-                        break;
-                    case '=':
-                        if (!foundPoint)
-                            clause += '=';
-                        else
-                        {
-                            clause += ProcessFromToOperator(i, val[valId % 2], val[valId + 1 % 2],
-                                                _filter[i - 1], ref _parameter);
-                            foundPoint = false;
-                            val[valId + 1 % 2] = "";
-                        }
-                        break;
-                    case '|':
-                        if (!foundPoint)
-                        {
-                            if (!operators.Contains(clause.Last()))
-                                clause += "=";
-                            clause += "@F" + TableName + i + " OR " + fieldName;
-                            _parameter.Add("F" + TableName + i, val[valId % 2]);                            
-                        }
-                        else
-                        {
-                            clause += ProcessFromToOperator(i, val[valId % 2], val[valId + 1 % 2],
-                                                _filter[i - 1], ref _parameter);
-                            foundPoint = false;
-                            val[valId + 1 % 2] = "";
-                        }
-                        val[valId % 2] = "";
-                        break;
-                    case '&':
-                        if (!foundPoint)
-                        {
-                            if (!operators.Contains(clause.Last()))
-                                clause += "=";
-                            clause += "@F" + TableName + i + " AND " + fieldName;
-                            _parameter.Add("F" + i, val[valId % 2]);
-                        }
-                        else
-                        {
-                            clause += ProcessFromToOperator(i, val[valId % 2], val[valId + 1 % 2],
-                                                _filter[i - 1], ref _parameter);
-                            foundPoint = false;
-                            val[valId+1 % 2] = "";
-                        }
-                        val[valId % 2] = "";
-                        break;
-                    case '.':
-                        if (foundPoint) //found second . => switch to second value storage
-                            valId++;
-                        else //found first . => remember for next loop (we're now in another State)
-                            foundPoint = true;
-                        break;
-                    default:
-                        val[valId % 2] += _filter[i];                        
-                        break;
-                }
-            }
-
-            if (foundPoint) // we're at the end of the line and still havent processed the .'s. That Means we have sth. like "1..5" or "1.." or "..5"
-            {
-                clause += ProcessFromToOperator(_filter.Length, val[valId % 2], val[(valId+1) % 2], 
-                                                _filter[_filter.Length-1], ref _parameter);
-            }
-            else
-            {
-                if (!operators.Contains(clause.Last()))
-                    clause += "=";
-                clause += "@F"+ TableName + _filter.Length;
-                _parameter.Add("F"+ TableName + _filter.Length, val[valId % 2]);
-            }
-
-            return clause+")";
-        }
-
-        private string ProcessFromToOperator(int id, string currVal, string lastVal, char lastChar, ref Dictionary<string, string> _parameter)
-        {
-            string clause="";
-
-            if (lastVal == "" || currVal == "")
-            {
-                if (lastChar == '.') //case: "1.."
-                { 
-                    clause += ">=";
-                    _parameter.Add("F"+ TableName + id, lastVal);
-                }
-                else //case: "..5"
-                { 
-                    clause += "<=";
-                    _parameter.Add("F" + TableName + id, currVal);
-                }
-                clause += "@F" + id;                
-            }
-            else //case: "1..5"
-            {
-                clause += " BETWEEN ";
-                clause += "@F" + TableName + (id - 1);
-                clause += " AND ";
-                clause += "@F" + TableName + id;
-
-                _parameter.Add("F" + TableName + (id - 1), lastVal);
-                _parameter.Add("F" + TableName + id, currVal);
-            }
-
-            return clause;
-        }
-
-        internal string MakeSelectFrom(bool _isRootTable=false)
-        {
-            string sqlTableName = "`" + TableName + "`.";
-            string ret;
-            if (_isRootTable)
-                ret = "SELECT ";
-            else
-                ret = "";
-
-            foreach (PropertyInfo p in GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute))))
-            {
-                ret += sqlTableName + p.Name + " AS '" + TableName + "." + p.Name + "',";
-            }            
-            foreach(ECJoin j in joins)
-            {
-                ret += ((ECTable)j.Table).MakeSelectFrom()+",";
-            }
-            ret = ret.Substring(0, ret.Length - 1);
-
-            if(_isRootTable)
-                ret += " FROM "+ "`" + TableName + "`";
-
-            return ret;
-        }
-
-        internal string MakeJoins()
-        {
-            string ret = "";
-
-            foreach(ECJoin j in joins)
-            {
-                ECTable joinTable = ((ECTable)j.Table);
-                switch (j.JoinType)
-                {
-                    case ECJoinType.Inner:
-                        ret += " INNER JOIN ";
-                        break;
-                    case ECJoinType.LeftOuter:
-                        ret += " LEFT OUTER JOIN ";
-                        break;
-                    case ECJoinType.RightOuter:
-                        ret += " RIGHT OUTER JOIN ";
-                        break;
-                }
-                if (j.OnTargetField != null)
-                    ret += "`"+joinTable.TableName+"` ON "+"`"+joinTable.TableName+"`."+j.OnTargetField + "=`"+TableName+"`."+j.OnSourceField;
-                else
-                    ret += "`" + joinTable.TableName + "` ON " + "`" + joinTable.TableName + "`.RecId=`" + TableName + "`." + j.OnSourceField;
-                ret += joinTable.MakeJoins();
-            }
-
-            return ret;
-        }
-
-        #endregion
+        #endregion        
 
         #region Interface
+
+        /// <summary>
+        /// IEnumerable implementation.
+        /// </summary>
+        /// <returns>True: Some more records to come. False: No more records to come.</returns>
+        public bool MoveNext()
+        {
+            bool ret = false;
+            if (records.Count == 0)
+                return ret;
+
+            if (curRecIdxEnumerator >= records.Count - 1) //Here we stand at the last record
+            {
+                curRecIdxEnumerator = -1;
+                ret = false;
+            }
+            else
+            {
+                curRecIdxEnumerator++;
+                ret = true;
+            }
+
+            InvokeMethodeOnJoinedTables(nameof(MoveNext), false);
+            return ret;
+        }
+
+        /// <summary>
+        /// IEnumerator implementation. Returns the current record.
+        /// </summary>
+        public object Current
+        {
+            get
+            {
+                ECTable dummy = (ECTable)Activator.CreateInstance(this.GetType());
+
+                dummy.CopyFrom(records[curRecIdxEnumerator], false);
+                dummy.joins = new List<ECJoin>();
+
+                foreach (ECJoin j in this.joins)
+                {
+                    ECJoin dummyJoin = (ECJoin)Activator.CreateInstance(typeof(ECJoin));
+
+                    dummyJoin.Table = (ECTable)Activator.CreateInstance(j.Table.GetType());
+                    dummyJoin.JoinType = j.JoinType;
+                    dummyJoin.OnSourceField = j.OnSourceField;
+                    dummyJoin.OnTargetField = j.OnTargetField;                    
+                    dummyJoin.Table.CopyFrom(((ECTable)j.Table).GetType().GetProperty("Current").GetValue(j.Table));
+
+                    dummy.joins.Add(dummyJoin);
+                }                
+
+                return dummy;
+            }
+
+        }
+
         /// <summary>
         /// IEquatable implementation.
         /// </summary>
@@ -935,8 +798,9 @@ namespace ECDatabaseEngine
         /// <returns>True: if both RecIds are the same. False: If not so.</returns>
         public bool Equals(ECTable _other)
         {
-            return (globalRecId == _other.globalRecId);
+            return _other.guid.Equals(this.guid);
         }
+
         /// <summary>
         /// IEnumerator implementation.
         /// </summary>
@@ -945,6 +809,7 @@ namespace ECDatabaseEngine
         {
             return this;
         }
+
         /// <summary>
         /// Return the content of the current record as string.
         /// </summary>
@@ -961,14 +826,15 @@ namespace ECDatabaseEngine
         }
         #endregion
 
-        private void InvokeMethodeOnJoinedTables(string _method, object[] _params = null)
+        private void InvokeMethodeOnJoinedTables(string _method, bool _fillNullParms = true, object[] _params = null)
         {
-            if (_params == null)
-                _params = new object[] { };
+            if (_params == null && _fillNullParms)
+                _params = new object[] { true };
             foreach (ECJoin j in joins)
             {
                 ((ECTable)j.Table).GetType().GetMethod(_method).Invoke(j.Table, _params);
             }
         }
+
     }
 }

@@ -8,12 +8,14 @@ namespace ECDatabaseEngine
 {
     internal interface IECConnection
     {
-        bool    IsConnected { get; }
-        string  CurrentDatabase { get; }
-        string  CurrentUser { get; }
+        bool IsConnected { get; }
+        string CurrentDatabase { get; }
+        string CurrentUser { get; }
+        ECSqlStatementBuilderBase SqlBuilder { get; }
+
 
         bool Connect(Dictionary<string, string> _params);
-        void Disconnect();        
+        void Disconnect();
         int Insert(ECTable _table);
         void Delete(ECTable _table);
         void Modify(ECTable _table);
@@ -22,6 +24,5 @@ namespace ECDatabaseEngine
         void CreateTableIfNotExist(ECTable _table);
         void AlterTableFields(ECTable _table);              
         string FieldTypeToSqlType(FieldType _ft);
-        void SetPassword(string _password);
     }
 }

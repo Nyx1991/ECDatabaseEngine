@@ -21,28 +21,35 @@ namespace ConsoleTest
                     AppRessource.pass
                 );
             */
-            string connectionString = String.Format("driver=sqlite;dbPath=C:\\temp\\test.db3");
+            string connectionString = String.Format(@"driver=sqlite;dbPath=C:\temp\test.db3");
 
-            ECDatabaseConnection.CreateConnection(connectionString);
+            ECDatabaseConnection.Connect(connectionString);
 
             Person p = new Person();
             Address a = new Address();
 
+            p.AddJoin(a, nameof(p.RefAddress), ECJoinType.Inner);
+            p.AddOrderBy(nameof(p.RecId));
+            p.OrderType = OrderType.DESC;
             p.FindSet();
+            //a.FindSet();
 
-            Console.WriteLine(ECDatabaseConnection.IsConnected);                        
+            print(p);
+            print(a);
+
+            Console.WriteLine(ECDatabaseConnection.IsConnected);
 
             ECDatabaseConnection.Disconnect();            
             Console.ReadKey();
         }
 
-        public static void print(Person pers)
+        public static void print(ECTable t)
         {
             do
             {
                 Console.WriteLine("------------------------------------");
-                Console.WriteLine(pers);
-            } while (pers.Next());
+                Console.WriteLine(t);
+            } while (t.Next());
         }
     }
 }
