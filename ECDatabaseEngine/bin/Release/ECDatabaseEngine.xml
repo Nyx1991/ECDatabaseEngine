@@ -15,6 +15,17 @@
             Use AddOrderBy(_fieldName) to add fields you want the records to be orderd after
             </summary>
         </member>
+        <member name="P:ECDatabaseEngine.ECTable.IsJoined">
+            <summary>
+            True, if the table is part of a join and is not the parent table
+            </summary>
+        </member>
+        <member name="P:ECDatabaseEngine.ECTable.Parent">
+            <summary>
+            Returns the the table this table is joined into.
+            Returns null if this table is not a part of a join
+            </summary>
+        </member>
         <member name="E:ECDatabaseEngine.ECTable.OnBeforeInsert">
             <summary>
             Invoked before a new record will be inserted an written to the database.
@@ -130,7 +141,21 @@
             (Join someTable ON thisTable.SourceField=_table.TargetField)</param>
             <param name="_joinType">INNER, LEFT OUTER or RIGHT OUTER</param>
         </member>
+        <member name="M:ECDatabaseEngine.ECTable.IsTablePartOfJoinHierarchy(ECDatabaseEngine.ECTable)">
+            <summary>
+            True if the given table occures within this tables joined tables
+            </summary>
+            <param name="_table">The table that should be looked after in joined tables</param>
+            <returns></returns>
+        </member>
         <member name="M:ECDatabaseEngine.ECTable.Next(System.Boolean)">
+            <summary>
+            Get the next record
+            </summary>
+            <param name="_invokeEvents">False: Events will not be invoked. Default: True</param>
+            <returns>True if a record was found. False if no more record was found</returns>
+        </member>
+        <member name="M:ECDatabaseEngine.ECTable.Previous(System.Boolean)">
             <summary>
             Get the next record
             </summary>
@@ -208,13 +233,13 @@
             Writes all records in the buffer to the database
             </summary>
         </member>
-        <member name="M:ECDatabaseEngine.ECTable.GetCurrentBufferIndex">
+        <member name="M:ECDatabaseEngine.ECTable.GetCurentBufferIndex">
             <summary>
             Returns the position of the current record in the loaded dataset
             </summary>
             <returns>Index of the current record</returns>
         </member>
-        <member name="M:ECDatabaseEngine.ECTable.SetCurrentBufferIndex(System.Int32)">
+        <member name="M:ECDatabaseEngine.ECTable.SetCurentBufferIndex(System.Int32)">
             <summary>
             Loads the record at the given position in the dataset
             </summary>

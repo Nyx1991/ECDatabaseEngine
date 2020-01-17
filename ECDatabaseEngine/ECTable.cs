@@ -20,6 +20,7 @@ namespace ECDatabaseEngine
         private Dictionary<string, KeyValuePair<string, string>> ranges;
         private List<string> order;
         private List<ECJoin> joins;
+        private ECTable parent;
         private Guid guid;
         private int curRecIdx;
         private int curRecIdxEnumerator;
@@ -28,7 +29,7 @@ namespace ECDatabaseEngine
         internal Dictionary<string, string> Filter => filter;
         internal Dictionary<string, KeyValuePair<string, string>> Ranges => ranges;
         internal List<string> Order => order;
-        internal List<ECJoin> Joins => joins;        
+        internal List<ECJoin> Joins => joins;
 
         /// <summary>
         /// Determines in which order the records should be loaded.
@@ -38,7 +39,12 @@ namespace ECDatabaseEngine
         /// <summary>
         /// True, if the table is part of a join and is not the parent table
         /// </summary>
-        public bool IsJoined { get; private set; }        
+        public bool IsJoined => (this.Parent != null);
+        /// <summary>
+        /// Returns the the table this table is joined into.
+        /// Returns null if this table is not a part of a join
+        /// </summary>
+        public ECTable Parent { get { return parent; } private set { parent = value; } }
         internal string SqlTableName { get => "`" + TableName + "`"; }                
 
         #region EventHandler
@@ -205,7 +211,7 @@ namespace ECDatabaseEngine
             if (GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute)) && x.Name == _foreignKey).Count() == 0)
                 throw new ECFieldNotFoundException("Field '" + _foreignKey + "' not found in table '" + TableName + "'");
 
-            _table.IsJoined = true;
+            _table.Parent = this;
 
             ECJoin join = new ECJoin();
             join.JoinType = _joinType;
@@ -229,7 +235,7 @@ namespace ECDatabaseEngine
             if (_table.GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute)) && x.Name == _onTargetField).Count() == 0)
                 throw new ECFieldNotFoundException("Field '" + _onTargetField + "' not found in table '" + _table.TableName + "'");
 
-            _table.IsJoined = true;
+            _table.Parent = this;
 
             ECJoin join = new ECJoin();
             join.JoinType = _joinType;
@@ -239,12 +245,13 @@ namespace ECDatabaseEngine
             joins.Add(join);
         }
 
+        
         /// <summary>
         /// True if the given table occures within this tables joined tables
         /// </summary>
         /// <param name="_table">The table that should be looked after in joined tables</param>
         /// <returns></returns>
-        public bool IsJoinedTable(ECTable _table)
+        public bool IsTablePartOfJoinHierarchy(ECTable _table)
         {
             if (joins.Count == 0)
             {
@@ -254,11 +261,12 @@ namespace ECDatabaseEngine
             {
                 foreach (ECJoin j in joins)
                 {
-                    return j.Table.IsJoinedTable(_table);
+                    return j.Table.IsTablePartOfJoinHierarchy(_table);
                 }
             }
             return false;
         }
+        
         #endregion
 
         #region GetData
@@ -289,6 +297,37 @@ namespace ECDatabaseEngine
             InvokeMethodeOnJoinedTables(nameof(Next));
             if (_invokeEvents)
             { 
+                OnChanged?.Invoke(this, this);
+            }
+            return ret;
+        }
+
+        /// <summary>
+        /// Get the next record
+        /// </summary>
+        /// <param name="_invokeEvents">False: Events will not be invoked. Default: True</param>
+        /// <returns>True if a record was found. False if no more record was found</returns>
+        public bool Previous(bool _invokeEvents = true)
+        {
+            bool ret = false;
+            if (records.Count == 0)
+                return ret;
+
+            if (curRecIdx == 0) //Here we stand at the first record
+            {
+                curRecIdx = records.Count - 1;
+                ret = false;
+            }
+            else
+            {
+                curRecIdx--;
+                ret = true;
+            }
+
+            CopyFrom(records[curRecIdx], false);
+            InvokeMethodeOnJoinedTables(nameof(Next));
+            if (_invokeEvents)
+            {
                 OnChanged?.Invoke(this, this);
             }
             return ret;

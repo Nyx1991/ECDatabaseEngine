@@ -15,7 +15,6 @@ E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Release\EntityFramewor
 E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Release\System.Data.SQLite.xml
 E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Release\System.Data.SQLite.dll.config
 E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Release\MySql.Data.xml
-E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\obj\Release\ConsoleTest.csprojResolveAssemblyReference.cache
 E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\obj\Release\ConsoleTest.AppRessource.resources
 E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\obj\Release\ConsoleTest.csproj.GenerateResource.cache
 E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\obj\Release\ConsoleTest.csproj.CoreCompileInputs.cache
@@ -23,3 +22,4 @@ E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\obj\Release\ConsoleTest.cs
 E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\obj\Release\ConsoleTest.exe
 E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\obj\Release\ConsoleTest.pdb
 E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Release\ECDatabaseEngine.xml
+E:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\obj\Release\ConsoleTest.csprojAssemblyReference.cache

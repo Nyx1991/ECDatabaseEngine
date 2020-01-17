@@ -12,12 +12,12 @@ namespace ECDatabaseWinFormsExtension
 
     public static class DataGridViewExtension
     {
-        private static Dictionary<DataGridView, ECTable> dataGridViewsWithECTableBinding;
+        private static Dictionary<string, ECTable> dataGridViewsWithECTableBinding;
         const string mappingColNameConst = "Buffer_Idx";
 
         static DataGridViewExtension()
         {
-            dataGridViewsWithECTableBinding = new Dictionary<DataGridView, ECTable>();
+            dataGridViewsWithECTableBinding = new Dictionary<string, ECTable>();
         }
 
         /// <summary>
@@ -49,10 +49,10 @@ namespace ECDatabaseWinFormsExtension
                                            bool _writeBufferIdxMapping,
                                            params string[] _fields)
         {
+            string key = $"{_dgv.Tag}_{_table.TableName}";
             string mappingColName = $"{ _table.TableName }_{mappingColNameConst}";
-            bool isJoindTable = (dataGridViewsWithECTableBinding.ContainsKey(_dgv) &&
-                                 !dataGridViewsWithECTableBinding[_dgv].Equals(_table) &&
-                                 dataGridViewsWithECTableBinding[_dgv].IsJoinedTable(_table));
+            bool isJoindTable = (_table.IsJoined);
+
             DataGridViewRow row;
             DataGridViewColumn mappingCol;
 
@@ -153,13 +153,23 @@ namespace ECDatabaseWinFormsExtension
                                              FieldFilter _ff,
                                              params string[] _fields)
         {
+            if (_dgv.Tag == null)
+            {
+                _dgv.Tag = Guid.NewGuid().ToString();
+            }
+            else if (!dataGridViewsWithECTableBinding.ContainsKey(_dgv.Tag.ToString()))
+            {
+                throw new ECDataGridTagPropertyInUse(_dgv);
+            }
+
+            string key = $"{_dgv.Tag}_{_table.TableName}";
             string mappingColName = $"{ _table.TableName }_{mappingColNameConst}";
 
-            if (dataGridViewsWithECTableBinding.ContainsKey(_dgv))
+            if (dataGridViewsWithECTableBinding.ContainsKey(key))
             {
                 throw new ECBindingAlreadyExistsException(_dgv);
             }
-            dataGridViewsWithECTableBinding.Add(_dgv, _table);
+            dataGridViewsWithECTableBinding.Add(key, _table);
             _dgv.AddDataFromECTable(_table, _ff, true, _fields);
 
             _table.OnBeforeFindSet += delegate (object sender, ECTable _callerTable)
@@ -190,14 +200,17 @@ namespace ECDatabaseWinFormsExtension
 
                 //_table.SetCurrentBufferIndex(Convert.ToInt32(_dgv.Rows[e.RowIndex].Cells[mappingColName].Value));
                 p = _table.GetType().GetProperty(fieldName);
-                p.SetValue(_table, _dgv.Rows[e.RowIndex].Cells[e.ColumnIndex].Value);
+                Object valueString = _dgv.Rows[e.RowIndex].Cells[e.ColumnIndex].Value;
+                Object valueWithCorrectType = Convert.ChangeType(valueString, p.GetValue(_table).GetType());
+                p.SetValue(_table, valueWithCorrectType);
             };
-
+            
             _dgv.Disposed += delegate (object sender, EventArgs a)
             {
-                dataGridViewsWithECTableBinding.Remove(_dgv);
+                dataGridViewsWithECTableBinding.Remove(_dgv.Tag.ToString());
             };
         }
+
 
         /// <summary>
         /// Based on the Cell-/Row-/Column-Selection of the DataGridView, the given ECTable will be filtered to these records

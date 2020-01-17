@@ -19,3 +19,4 @@ E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\obj\Release\ECDatabas
 E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\obj\Release\ECDatabaseEngine.dll
 E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\obj\Release\ECDatabaseEngine.pdb
 E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Release\ECDatabaseEngine.xml
+E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\obj\Release\ECDatabaseEngine.csprojAssemblyReference.cache

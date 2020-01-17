@@ -38,17 +38,18 @@ namespace WinFormsTest
             personGrid.SetECTableDataBinding(person, FieldFilter.HideGivenFields, nameof(person.RecId));
             personGrid.AddDataFromECTable(address, FieldFilter.ShowGivenFields, nameof(address.City), nameof(address.Street));
 
-            addressGrid.SetECTableDataBinding(address);
+            //addressGrid.SetECTableDataBinding(address);
         }
 
         private void button2_Click(object sender, EventArgs e)
         {
-            person.ModifyAll();            
+            person.ModifyAll();
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
             person.FindSet();
+            personGrid.AddDataFromECTable(address, FieldFilter.ShowGivenFields, nameof(address.City), nameof(address.Street));
         }
     }
 }
