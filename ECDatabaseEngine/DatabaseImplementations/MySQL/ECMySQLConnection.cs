@@ -41,10 +41,9 @@ namespace ECDatabaseEngine
                 isConnected = true;
             }
             catch (Exception e)
-            {
-                Console.WriteLine(e.StackTrace);
+            {                
                 isConnected = false;
-                return false;
+                throw e;                
             }
             return true;
         }

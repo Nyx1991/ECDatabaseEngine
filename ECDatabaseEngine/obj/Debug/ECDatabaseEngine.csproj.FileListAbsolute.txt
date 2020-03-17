@@ -19,3 +19,25 @@ E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\EntityFrame
 E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\System.Data.SQLite.xml
 E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\System.Data.SQLite.dll.config
 E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\ECDatabaseEngine.xml
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\ECDatabaseEngine.dll.config
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\ECDatabaseEngine.xml
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\ECDatabaseEngine.dll
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\ECDatabaseEngine.pdb
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\EntityFramework.dll
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\EntityFramework.SqlServer.dll
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\MySql.Data.dll
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\System.Data.SQLite.dll
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\System.Data.SQLite.EF6.dll
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\System.Data.SQLite.Linq.dll
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\EntityFramework.xml
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\EntityFramework.SqlServer.xml
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\MySql.Data.xml
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\System.Data.SQLite.xml
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\System.Data.SQLite.dll.config
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseEngine\obj\Debug\ECDatabaseEngine.csprojAssemblyReference.cache
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseEngine\obj\Debug\ECDatabaseEngine.LibResource.resources
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseEngine\obj\Debug\ECDatabaseEngine.csproj.GenerateResource.cache
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseEngine\obj\Debug\ECDatabaseEngine.csproj.CoreCompileInputs.cache
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseEngine\obj\Debug\ECDatabaseEngine.csproj.CopyComplete
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseEngine\obj\Debug\ECDatabaseEngine.dll
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseEngine\obj\Debug\ECDatabaseEngine.pdb

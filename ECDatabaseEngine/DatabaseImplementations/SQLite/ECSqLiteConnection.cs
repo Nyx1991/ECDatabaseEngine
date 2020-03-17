@@ -43,18 +43,17 @@ namespace ECDatabaseEngine
 
                 if (_params.Keys.Contains("pass"))
                     connection?.SetPassword(_params["pass"]);
-                connection.Open();                
-            
+                connection.Open();
+
                 command = new SQLiteCommand(connection);
                 currentDatabase = fi.Name;
                 currentUser = "";
-                isConnected = true;                
+                isConnected = true;
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.StackTrace);
                 isConnected = false;
-                return false;
+                throw e;
             }
             return true;
         }

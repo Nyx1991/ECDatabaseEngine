@@ -20,3 +20,25 @@ E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\obj\Release\ECDatabas
 E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\obj\Release\ECDatabaseEngine.pdb
 E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Release\ECDatabaseEngine.xml
 E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\obj\Release\ECDatabaseEngine.csprojAssemblyReference.cache
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Release\ECDatabaseEngine.dll.config
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Release\ECDatabaseEngine.xml
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Release\ECDatabaseEngine.dll
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Release\ECDatabaseEngine.pdb
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Release\EntityFramework.dll
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Release\EntityFramework.SqlServer.dll
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Release\MySql.Data.dll
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Release\System.Data.SQLite.dll
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Release\System.Data.SQLite.EF6.dll
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Release\System.Data.SQLite.Linq.dll
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Release\EntityFramework.xml
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Release\EntityFramework.SqlServer.xml
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Release\MySql.Data.xml
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Release\System.Data.SQLite.xml
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Release\System.Data.SQLite.dll.config
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseEngine\obj\Release\ECDatabaseEngine.csprojAssemblyReference.cache
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseEngine\obj\Release\ECDatabaseEngine.LibResource.resources
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseEngine\obj\Release\ECDatabaseEngine.csproj.GenerateResource.cache
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseEngine\obj\Release\ECDatabaseEngine.csproj.CoreCompileInputs.cache
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseEngine\obj\Release\ECDatabaseEngine.csproj.CopyComplete
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseEngine\obj\Release\ECDatabaseEngine.dll
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseEngine\obj\Release\ECDatabaseEngine.pdb
