@@ -14,3 +14,19 @@ E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\obj\Debug\
 E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\obj\Debug\ECDatabaseWinFormsExtension.pdb
 E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\bin\Debug\ECDatabaseEngine.xml
 E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\obj\Debug\ECDatabaseWinFormsExtension.csprojAssemblyReference.cache
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\bin\Debug\ECDatabaseWinFormsExtension.dll
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\bin\Debug\ECDatabaseWinFormsExtension.pdb
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\bin\Debug\ECDatabaseEngine.dll
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\bin\Debug\MySql.Data.dll
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\bin\Debug\System.Data.SQLite.dll
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\bin\Debug\ECDatabaseEngine.pdb
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\bin\Debug\ECDatabaseEngine.xml
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\bin\Debug\ECDatabaseEngine.dll.config
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\bin\Debug\MySql.Data.xml
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\bin\Debug\System.Data.SQLite.xml
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\bin\Debug\System.Data.SQLite.dll.config
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\obj\Debug\ECDatabaseWinFormsExtension.csprojAssemblyReference.cache
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\obj\Debug\ECDatabaseWinFormsExtension.csproj.CoreCompileInputs.cache
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\obj\Debug\ECDatabaseWinFormsExtension.csproj.CopyComplete
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\obj\Debug\ECDatabaseWinFormsExtension.dll
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\obj\Debug\ECDatabaseWinFormsExtension.pdb

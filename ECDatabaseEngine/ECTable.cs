@@ -631,11 +631,12 @@ namespace ECDatabaseEngine
                 DateTime dt = (DateTime)_p.GetValue(this);
                 sql = String.Format("'{0}-{1}-{2} {3}:{4}:{5}.{6}'", dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute, dt.Second, dt.Millisecond);
             }
+            else if (tfa.type == FieldType.BOOLEAN)
+            { 
+                sql += "'" + _p.GetValue(this) + "'";
+            }
             else
                 throw new NotImplementedException();
-
-            if (tfa.type == FieldType.BOOLEAN)
-                sql += "'" + _p.GetValue(this) + "',";
 
             return sql;
         }
