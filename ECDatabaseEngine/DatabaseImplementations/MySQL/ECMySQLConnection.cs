@@ -41,9 +41,9 @@ namespace ECDatabaseEngine
                 isConnected = true;
             }
             catch (Exception e)
-            {                
+            {
                 isConnected = false;
-                throw e;                
+                throw e;
             }
             return true;
         }
@@ -63,13 +63,13 @@ namespace ECDatabaseEngine
             command = new MySqlCommand();
             command.Connection = connection;
 
-            Type t = _table.GetType();            
+            Type t = _table.GetType();
             Dictionary<string, string> parms = new Dictionary<string, string>();
             string sql = SqlBuilder.GenerateSqlForECTableWithPreparedStatements(_table, ref parms);
-            
-            command.Parameters.Clear();            
+
+            command.Parameters.Clear();
             foreach (KeyValuePair<string, string> kv in parms)
-                command.Parameters.AddWithValue(kv.Key, kv.Value);          
+                command.Parameters.AddWithValue(kv.Key, kv.Value);
 
             command.CommandText = sql;
             command.Prepare();
@@ -81,7 +81,7 @@ namespace ECDatabaseEngine
         {
             List<Dictionary<string, string>> ret = new List<Dictionary<string, string>>();
             Dictionary<string, string> currentRecord = new Dictionary<string, string>();
-            
+
             MySqlDataReader res = command.ExecuteReader();
 
             while (res.Read())
@@ -104,16 +104,16 @@ namespace ECDatabaseEngine
         public int Insert(ECTable _table)
         {
             Type t = _table.GetType();
-            PropertyInfo[] properties = t.GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute), false)).ToArray();
+            PropertyInfo[] properties = t.GetProperties().Where(x => x.IsDefined(typeof(ECTableFieldAttribute), false)).ToArray();
 
             string sql = "INSERT INTO `" + t.Name + "` (";
 
-            foreach (PropertyInfo p in properties.Where(x => !x.IsDefined(typeof(AutoIncrementAttribute), false)))
+            foreach (PropertyInfo p in properties.Where(x => !x.IsDefined(typeof(ECAutoIncrementAttribute), false)))
                 sql += "`" + p.Name + "`,";
             sql = sql.Substring(0, sql.Length - 1); //delete last comma
 
             sql += ") VALUES (";
-            foreach (PropertyInfo p in properties.Where(x => !x.IsDefined(typeof(AutoIncrementAttribute), false)))
+            foreach (PropertyInfo p in properties.Where(x => !x.IsDefined(typeof(ECAutoIncrementAttribute), false)))
                 sql += _table.GetValueInSqlFormat(p) + ",";
             sql = sql.Substring(0, sql.Length - 1); //delete last comma
 
@@ -143,7 +143,7 @@ namespace ECDatabaseEngine
         public void Modify(ECTable _table)
         {
             Type t = _table.GetType();
-            PropertyInfo[] properties = t.GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute), false)).ToArray();
+            PropertyInfo[] properties = t.GetProperties().Where(x => x.IsDefined(typeof(ECTableFieldAttribute), false)).ToArray();
             string sql = "UPDATE `" + t.Name + "` SET ";
 
             foreach (PropertyInfo p in properties)
@@ -173,32 +173,32 @@ namespace ECDatabaseEngine
         public void CreateTableIfNotExist(ECTable _table)
         {
             Type t = _table.GetType();
-            PropertyInfo[] pi = t.GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute), false)).ToArray();
+            PropertyInfo[] pi = t.GetProperties().Where(x => x.IsDefined(typeof(ECTableFieldAttribute), false)).ToArray();
 
-            TableFieldAttribute tfa;
+            ECTableFieldAttribute tfa;
             if (Exists(_table))
             {
                 string primKey = "";
                 string createStmt = "CREATE TABLE `" + currentDatabase + "`.`" + t.Name + "` (";
                 foreach (PropertyInfo p in pi)
                 {
-                    tfa = p.GetCustomAttribute<TableFieldAttribute>();
+                    tfa = p.GetCustomAttribute<ECTableFieldAttribute>();
                     createStmt += "`" + p.Name + "` " + tfa.type.ToString();
                     if (tfa.type == FieldType.VARCHAR)
                         createStmt += "(" + tfa.length.ToString() + ") ";
 
-                    if (p.GetCustomAttribute(typeof(PrimaryKeyAttribute)) != null)
+                    if (p.GetCustomAttribute(typeof(ECPrimaryKeyAttribute)) != null)
                     {
                         createStmt += " NOT NULL";
                         primKey += "`" + p.Name + "`,";
                     }
-                    else if (p.GetCustomAttribute(typeof(NotNullAttribute)) != null)
+                    else if (p.GetCustomAttribute(typeof(ECNotNullAttribute)) != null)
                         createStmt += " NOT NULL";
                     else
                         createStmt += " NULL";
 
 
-                    if (p.GetCustomAttribute(typeof(AutoIncrementAttribute)) != null)
+                    if (p.GetCustomAttribute(typeof(ECAutoIncrementAttribute)) != null)
                         createStmt += " AUTO_INCREMENT";
 
                     createStmt += ",";
@@ -211,7 +211,7 @@ namespace ECDatabaseEngine
                 using (MySqlCommand cmd = new MySqlCommand(createStmt, connection))
                     cmd.ExecuteNonQuery();
             }
-        }        
+        }
 
         public string FieldTypeToSqlType(FieldType _ft)
         {
@@ -233,16 +233,16 @@ namespace ECDatabaseEngine
                 PropertyInfo p = t.GetProperty(kv.Key);
                 string sql = "ALTER TABLE `" + t.Name + "` ADD `" + kv.Key + "` " + kv.Value;
 
-                if (p.GetCustomAttribute(typeof(PrimaryKeyAttribute)) != null)
+                if (p.GetCustomAttribute(typeof(ECPrimaryKeyAttribute)) != null)
                 {
                     sql += " NOT NULL PRIMARY KEY";
                 }
-                else if (p.GetCustomAttribute(typeof(NotNullAttribute)) != null)
+                else if (p.GetCustomAttribute(typeof(ECNotNullAttribute)) != null)
                     sql += " NOT NULL";
                 else
                     sql += " NULL";
 
-                if (p.GetCustomAttribute(typeof(AutoIncrementAttribute)) != null)
+                if (p.GetCustomAttribute(typeof(ECAutoIncrementAttribute)) != null)
                     sql += " AUTOINCREMENT";
 
                 using (MySqlCommand cmd = new MySqlCommand(sql, connection))
@@ -250,13 +250,13 @@ namespace ECDatabaseEngine
             }
 
             //Delete Fields
-            foreach(KeyValuePair<string, string> kv in fieldsToDelete)
-            { 
+            foreach (KeyValuePair<string, string> kv in fieldsToDelete)
+            {
                 string sql = "ALTER TABLE `" + t.Name + "` DROP COLUMN `" + kv.Key + "`";
                 using (MySqlCommand cmd = new MySqlCommand(sql, connection))
-                    cmd.ExecuteNonQuery();                
+                    cmd.ExecuteNonQuery();
             }
-        }        
+        }
 
         internal void GetFieldsToChange(ECTable _table, ref Dictionary<string, string> _fieldsToAdd,
                                         ref Dictionary<string, string> _fieldsToDelete,
@@ -265,9 +265,9 @@ namespace ECDatabaseEngine
             Type t = _table.GetType();
             Dictionary<string, string> tableProperties = new Dictionary<string, string>();
 
-            foreach (PropertyInfo p in _table.GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute))))
+            foreach (PropertyInfo p in _table.GetType().GetProperties().Where(x => x.IsDefined(typeof(ECTableFieldAttribute))))
             {
-                TableFieldAttribute tfa = (TableFieldAttribute)p.GetCustomAttribute(typeof(TableFieldAttribute));
+                ECTableFieldAttribute tfa = (ECTableFieldAttribute)p.GetCustomAttribute(typeof(ECTableFieldAttribute));
                 if (tfa.type == FieldType.VARCHAR)
                     tableProperties.Add(p.Name, FieldTypeToSqlType(tfa.type) + "(" + tfa.length.ToString() + ")");
                 else
@@ -285,7 +285,7 @@ namespace ECDatabaseEngine
                     type = type.Substring(0, type.IndexOf('('));
                 _databaseFields.Add(res["Field"].ToString(), type);
             }
-                
+
 
             foreach (KeyValuePair<string, string> kv in tableProperties)
                 if (!_databaseFields.Contains(kv))

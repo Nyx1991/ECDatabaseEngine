@@ -43,13 +43,23 @@ namespace WinFormsTest
 
         private void button2_Click(object sender, EventArgs e)
         {
-            person.ModifyAll();
+            person.Modify();
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
             person.FindSet();
             personGrid.AddDataFromECTable(address, FieldFilter.ShowGivenFields, nameof(address.City), nameof(address.Street));
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            person.Insert();            
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            person.Delete();
         }
     }
 }

@@ -10,11 +10,11 @@ namespace WinFormsTest
     class Person : ECTable
     {
 
-        [TableField(FieldType.VARCHAR, 50)]
+        [ECTableField(FieldType.VARCHAR, 50)]
         public string Firstname { get; set; }
-        [TableField(FieldType.VARCHAR, 50)]
+        [ECTableField(FieldType.VARCHAR, 50)]
         public string Name { get; set; }
-        [TableField(FieldType.INT)]
+        [ECTableField(FieldType.INT)]
         public int RefAddress { get; set; }
     }
 }

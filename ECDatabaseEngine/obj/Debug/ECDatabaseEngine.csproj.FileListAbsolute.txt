@@ -41,3 +41,4 @@ C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseE
 C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseEngine\obj\Debug\ECDatabaseEngine.csproj.CopyComplete
 C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseEngine\obj\Debug\ECDatabaseEngine.dll
 C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseEngine\obj\Debug\ECDatabaseEngine.pdb
+E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\obj\Debug\ECDatabaseEngine.csprojAssemblyReference.cache

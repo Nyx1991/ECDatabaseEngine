@@ -22,3 +22,27 @@ E:\VisualStudio\Projects\ECDatabaseEngine\WinFormsTest\obj\Release\WinFormsTest.
 E:\VisualStudio\Projects\ECDatabaseEngine\WinFormsTest\obj\Release\WinFormsTest.csproj.CopyComplete
 E:\VisualStudio\Projects\ECDatabaseEngine\WinFormsTest\obj\Release\WinFormsTest.exe
 E:\VisualStudio\Projects\ECDatabaseEngine\WinFormsTest\obj\Release\WinFormsTest.pdb
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\WinFormsTest\obj\Release\WinFormsTest.csprojAssemblyReference.cache
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\WinFormsTest\obj\Release\WinFormsTest.Form1.resources
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\WinFormsTest\obj\Release\WinFormsTest.Properties.Resources.resources
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\WinFormsTest\obj\Release\WinFormsTest.csproj.GenerateResource.cache
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\WinFormsTest\obj\Release\WinFormsTest.csproj.CoreCompileInputs.cache
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\WinFormsTest\obj\Release\WinFormsTest.exe
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\WinFormsTest\obj\Release\WinFormsTest.pdb
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\WinFormsTest\bin\Release\x86\sqlite3.dll
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\WinFormsTest\bin\Release\x64\sqlite3.dll
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\WinFormsTest\bin\Release\WinFormsTest.exe.config
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\WinFormsTest\bin\Release\WinFormsTest.exe
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\WinFormsTest\bin\Release\WinFormsTest.pdb
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\WinFormsTest\bin\Release\ECDatabaseEngine.dll
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\WinFormsTest\bin\Release\ECDatabaseWinFormsExtension.dll
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\WinFormsTest\bin\Release\System.Data.SQLite.dll
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\WinFormsTest\bin\Release\MySql.Data.dll
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\WinFormsTest\bin\Release\ECDatabaseEngine.pdb
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\WinFormsTest\bin\Release\ECDatabaseEngine.xml
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\WinFormsTest\bin\Release\ECDatabaseEngine.dll.config
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\WinFormsTest\bin\Release\ECDatabaseWinFormsExtension.pdb
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\WinFormsTest\bin\Release\System.Data.SQLite.xml
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\WinFormsTest\bin\Release\System.Data.SQLite.dll.config
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\WinFormsTest\bin\Release\MySql.Data.xml
+C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\WinFormsTest\obj\Release\WinFormsTest.csproj.CopyComplete

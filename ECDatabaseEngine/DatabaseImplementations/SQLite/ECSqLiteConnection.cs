@@ -20,7 +20,7 @@ namespace ECDatabaseEngine
 
         private bool isConnected;
         private string currentDatabase;
-        private string currentUser;       
+        private string currentUser;
 
         public bool Connect(Dictionary<string, string> _params)
         {
@@ -61,32 +61,32 @@ namespace ECDatabaseEngine
         public void CreateTableIfNotExist(ECTable _table)
         {
             Type t = _table.GetType();
-            PropertyInfo[] pi = t.GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute), false)).ToArray();
+            PropertyInfo[] pi = t.GetProperties().Where(x => x.IsDefined(typeof(ECTableFieldAttribute), false)).ToArray();
 
-            TableFieldAttribute tfa;
-            
+            ECTableFieldAttribute tfa;
+
             if (!Exists(_table))
             {
-                string createStmt = "CREATE TABLE "+t.Name+" (";                
+                string createStmt = "CREATE TABLE " + t.Name + " (";
                 int i = 0;
                 foreach (PropertyInfo p in pi)
                 {
-                    tfa = p.GetCustomAttribute<TableFieldAttribute>();
-                    createStmt += "`"+ p.Name + "` "+ FieldTypeToSqlType(tfa.type);
+                    tfa = p.GetCustomAttribute<ECTableFieldAttribute>();
+                    createStmt += "`" + p.Name + "` " + FieldTypeToSqlType(tfa.type);
                     if (tfa.type == FieldType.VARCHAR)
                         createStmt += "(" + tfa.length.ToString() + ") ";
 
-                    if (p.GetCustomAttribute(typeof(PrimaryKeyAttribute)) != null)
+                    if (p.GetCustomAttribute(typeof(ECPrimaryKeyAttribute)) != null)
                     {
                         createStmt += " NOT NULL PRIMARY KEY";
                     }
-                    else if (p.GetCustomAttribute(typeof(NotNullAttribute)) != null)
+                    else if (p.GetCustomAttribute(typeof(ECNotNullAttribute)) != null)
                         createStmt += " NOT NULL";
                     else
                         createStmt += " NULL";
 
 
-                    if (p.GetCustomAttribute(typeof(AutoIncrementAttribute)) != null)
+                    if (p.GetCustomAttribute(typeof(ECAutoIncrementAttribute)) != null)
                         createStmt += " AUTOINCREMENT";
 
                     createStmt += ",";
@@ -95,7 +95,7 @@ namespace ECDatabaseEngine
 
                 createStmt = createStmt.Substring(0, createStmt.Length - 1) + ");"; //Delete the last ,                                    
                 command.CommandText = createStmt;
-                command.ExecuteNonQuery();                
+                command.ExecuteNonQuery();
             }
         }
 
@@ -124,15 +124,15 @@ namespace ECDatabaseEngine
         }
 
         public bool Exists(ECTable _table)
-        {            
+        {
             Type t = _table.GetType();
-            command.CommandText = "SELECT * FROM sqlite_master where type = 'table' AND name='"+ t.Name + "'";
+            command.CommandText = "SELECT * FROM sqlite_master where type = 'table' AND name='" + t.Name + "'";
             return (command.ExecuteScalar() != null);
-        }        
+        }
 
         public List<Dictionary<string, string>> GetData(ECTable _table, Dictionary<string, string> _filter, Dictionary<string, KeyValuePair<string, string>> _ranges, List<string> _order)
         {
-            Type t = _table.GetType();            
+            Type t = _table.GetType();
             Dictionary<string, string> parms = new Dictionary<string, string>();
             command = new SQLiteCommand(connection);
             string sql = SqlBuilder.GenerateSqlForECTableWithPreparedStatements(_table, ref parms);
@@ -141,7 +141,7 @@ namespace ECDatabaseEngine
             command.Parameters.Clear();
             foreach (KeyValuePair<string, string> kv in parms)
                 command.Parameters.AddWithValue(kv.Key, kv.Value);
-           
+
             command.CommandText = sql;
             command.Prepare();
             return (ExecuteSql());
@@ -150,7 +150,7 @@ namespace ECDatabaseEngine
         protected List<Dictionary<string, string>> ExecuteSql()
         {
             List<Dictionary<string, string>> ret = new List<Dictionary<string, string>>();
-            Dictionary<string, string> currentRecord = new Dictionary<string, string>();            
+            Dictionary<string, string> currentRecord = new Dictionary<string, string>();
             SQLiteDataReader res = command.ExecuteReader();
 
             while (res.Read())
@@ -168,20 +168,20 @@ namespace ECDatabaseEngine
         public int Insert(ECTable _table)
         {
             Type t = _table.GetType();
-            PropertyInfo[] properties = t.GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute), false)).ToArray();
+            PropertyInfo[] properties = t.GetProperties().Where(x => x.IsDefined(typeof(ECTableFieldAttribute), false)).ToArray();
 
-            command.Parameters.Clear();            
+            command.Parameters.Clear();
             string sql = "INSERT INTO `" + t.Name + "` (";
 
-            foreach (PropertyInfo p in properties.Where(x => !x.IsDefined(typeof(AutoIncrementAttribute), false)))
+            foreach (PropertyInfo p in properties.Where(x => !x.IsDefined(typeof(ECAutoIncrementAttribute), false)))
                 sql += "`" + p.Name + "`,";
             sql = sql.Substring(0, sql.Length - 1); //delete last comma
 
             sql += ") VALUES (";
-            foreach (PropertyInfo p in properties.Where(x => !x.IsDefined(typeof(AutoIncrementAttribute), false)))
+            foreach (PropertyInfo p in properties.Where(x => !x.IsDefined(typeof(ECAutoIncrementAttribute), false)))
             {
                 command.Parameters.AddWithValue(p.Name, p.GetValue(_table));
-                sql += "@"+ p.Name + ",";
+                sql += "@" + p.Name + ",";
             }
             sql = sql.Substring(0, sql.Length - 1); //delete last comma
 
@@ -195,7 +195,7 @@ namespace ECDatabaseEngine
             command.CommandText = sql;
             using (SQLiteDataReader r = command.ExecuteReader())
             {
-                r.Read();                 
+                r.Read();
                 return r.GetInt32(r.GetOrdinal(nameof(_table.RecId)));
             }
         }
@@ -203,7 +203,7 @@ namespace ECDatabaseEngine
         public void Modify(ECTable _table)
         {
             Type t = _table.GetType();
-            PropertyInfo[] properties = t.GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute), false)).ToArray();
+            PropertyInfo[] properties = t.GetProperties().Where(x => x.IsDefined(typeof(ECTableFieldAttribute), false)).ToArray();
             string sql = "UPDATE `" + t.Name + "` SET ";
 
             foreach (PropertyInfo p in properties)
@@ -218,7 +218,7 @@ namespace ECDatabaseEngine
 
         public string FieldTypeToSqlType(FieldType _ft)
         {
-            switch(_ft)
+            switch (_ft)
             {
                 case (FieldType.VARCHAR):
                     return "VARCHAR";
@@ -257,21 +257,21 @@ namespace ECDatabaseEngine
             GetFieldsToChange(_table, ref fieldsToAdd, ref fieldsToDelete, ref databaseFields);
 
             //Add Fields
-            foreach (KeyValuePair<string,string> kv in fieldsToAdd)
+            foreach (KeyValuePair<string, string> kv in fieldsToAdd)
             {
                 PropertyInfo p = t.GetProperty(kv.Key);
-                command.CommandText = "ALTER TABLE '"+t.Name+"' ADD '"+kv.Key+"' "+kv.Value;
+                command.CommandText = "ALTER TABLE '" + t.Name + "' ADD '" + kv.Key + "' " + kv.Value;
 
-                if (p.GetCustomAttribute(typeof(PrimaryKeyAttribute)) != null)
+                if (p.GetCustomAttribute(typeof(ECPrimaryKeyAttribute)) != null)
                 {
                     command.CommandText += " NOT NULL PRIMARY KEY";
                 }
-                else if (p.GetCustomAttribute(typeof(NotNullAttribute)) != null)
+                else if (p.GetCustomAttribute(typeof(ECNotNullAttribute)) != null)
                     command.CommandText += " NOT NULL";
                 else
                     command.CommandText += " NULL";
 
-                if (p.GetCustomAttribute(typeof(AutoIncrementAttribute)) != null)
+                if (p.GetCustomAttribute(typeof(ECAutoIncrementAttribute)) != null)
                     command.CommandText += " AUTOINCREMENT";
 
                 command.CommandText += ";";
@@ -287,11 +287,11 @@ namespace ECDatabaseEngine
                 CreateTableIfNotExist(_table);
 
                 string fields = "";
-                foreach (PropertyInfo p in t.GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute))))
+                foreach (PropertyInfo p in t.GetProperties().Where(x => x.IsDefined(typeof(ECTableFieldAttribute))))
                     fields += p.Name + ",";
                 fields = fields.Substring(0, fields.Length - 1);
 
-                command.CommandText = "INSERT INTO '" + t.Name + "' ("+fields+") SELECT " + fields + " FROM '" + t.Name + "_OLD';";
+                command.CommandText = "INSERT INTO '" + t.Name + "' (" + fields + ") SELECT " + fields + " FROM '" + t.Name + "_OLD';";
                 command.ExecuteNonQuery();
 
                 command.CommandText = "DROP TABLE '" + t.Name + "_OLD" + "'";
@@ -299,16 +299,16 @@ namespace ECDatabaseEngine
             }
         }
 
-        internal void GetFieldsToChange(ECTable _table, ref Dictionary<string, string> _fieldsToAdd, 
+        internal void GetFieldsToChange(ECTable _table, ref Dictionary<string, string> _fieldsToAdd,
                                         ref Dictionary<string, string> _fieldsToDelete,
                                         ref Dictionary<string, string> _databaseFields)
         {
             Type t = _table.GetType();
             Dictionary<string, string> tableProperties = new Dictionary<string, string>();
 
-            foreach (PropertyInfo p in _table.GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute))))
+            foreach (PropertyInfo p in _table.GetType().GetProperties().Where(x => x.IsDefined(typeof(ECTableFieldAttribute))))
             {
-                TableFieldAttribute tfa = (TableFieldAttribute)p.GetCustomAttribute(typeof(TableFieldAttribute));
+                ECTableFieldAttribute tfa = (ECTableFieldAttribute)p.GetCustomAttribute(typeof(ECTableFieldAttribute));
                 if (tfa.type == FieldType.VARCHAR)
                     tableProperties.Add(p.Name, FieldTypeToSqlType(tfa.type) + "(" + tfa.length.ToString() + ")");
                 else
@@ -319,12 +319,12 @@ namespace ECDatabaseEngine
             SQLiteDataReader res = command.ExecuteReader();
 
             while (res.Read())
-                _databaseFields.Add(res["name"].ToString(), res["type"].ToString().Replace(" ",""));
+                _databaseFields.Add(res["name"].ToString(), res["type"].ToString().Replace(" ", ""));
 
             foreach (KeyValuePair<string, string> kv in tableProperties)
                 if (!_databaseFields.Contains(kv))
                     _fieldsToAdd.Add(kv.Key, kv.Value);
-            
+
             foreach (KeyValuePair<string, string> kv in _databaseFields)
                 if (!tableProperties.Contains(kv))
                     _fieldsToDelete.Add(kv.Key, kv.Value);

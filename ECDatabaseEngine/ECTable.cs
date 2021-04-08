@@ -92,10 +92,10 @@ namespace ECDatabaseEngine
         /// Ongoing primary key of the table.
         /// This is a unique identifier (table scope).
         /// </summary>
-        [TableField(FieldType.INT)]
-        [NotNull]
-        [PrimaryKey]
-        [AutoIncrement]        
+        [ECTableField(FieldType.INT)]
+        [ECNotNull]
+        [ECPrimaryKey]
+        [ECAutoIncrement]        
         public int RecId { get; internal set; }        
         /// <summary>
         /// Record count.
@@ -118,7 +118,7 @@ namespace ECDatabaseEngine
             InitRecordFromDictionary(_values);
         }
 
-        #region Init/Reset/Clear
+        #region Init/Reset/Clear/Add
         /// <summary>
         /// Removes all filters and ranges and unloads all loaded Records. Initializes all Fields.
         /// </summary>
@@ -137,7 +137,7 @@ namespace ECDatabaseEngine
             joins = new List<ECJoin>();
             order = new List<string>();
             OrderType = OrderType.ASC;
-            foreach (PropertyInfo p in this.GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute))))
+            foreach (PropertyInfo p in this.GetType().GetProperties().Where(x => x.IsDefined(typeof(ECTableFieldAttribute))))
             {
                 Type type = p.PropertyType;
                 if (type != typeof(string))
@@ -166,7 +166,7 @@ namespace ECDatabaseEngine
         {
             InvokeMethodeOnJoinedTables(nameof(Reset));
             curRecIdxEnumerator = -1;                        
-        }
+        }        
 
         /// <summary>
         /// Clears the internal record-list.
@@ -208,7 +208,7 @@ namespace ECDatabaseEngine
         /// <param name="_joinType">INNER, LEFT OUTER or RIGHT OUTER</param>
         public void AddJoin(ECTable _table, string _foreignKey, ECJoinType _joinType)
         {
-            if (GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute)) && x.Name == _foreignKey).Count() == 0)
+            if (GetType().GetProperties().Where(x => x.IsDefined(typeof(ECTableFieldAttribute)) && x.Name == _foreignKey).Count() == 0)
                 throw new ECFieldNotFoundException("Field '" + _foreignKey + "' not found in table '" + TableName + "'");
 
             _table.Parent = this;
@@ -229,10 +229,10 @@ namespace ECDatabaseEngine
         /// <param name="_joinType">INNER, LEFT OUTER or RIGHT OUTER</param>
         public void AddJoin(ECTable _table, string _foreignKey, string _onTargetField, ECJoinType _joinType)
         {
-            if (GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute)) && x.Name == _foreignKey).Count() == 0)
+            if (GetType().GetProperties().Where(x => x.IsDefined(typeof(ECTableFieldAttribute)) && x.Name == _foreignKey).Count() == 0)
                 throw new ECFieldNotFoundException("Field '" + _foreignKey + "' not found in table '" + TableName + "'");
 
-            if (_table.GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute)) && x.Name == _onTargetField).Count() == 0)
+            if (_table.GetType().GetProperties().Where(x => x.IsDefined(typeof(ECTableFieldAttribute)) && x.Name == _onTargetField).Count() == 0)
                 throw new ECFieldNotFoundException("Field '" + _onTargetField + "' not found in table '" + _table.TableName + "'");
 
             _table.Parent = this;
@@ -509,10 +509,20 @@ namespace ECDatabaseEngine
         /// </summary>
         public void Modify()
         {
-            OnBeforeModify?.Invoke(this, this);
-            ECDatabaseConnection.Connection.Modify(this);
-            records[curRecIdx].CopyFrom(this);
-            OnAfterModify?.Invoke(this, this);
+            if (this.RecId == -1)
+            {
+                this.Insert();
+            }
+            else
+            {
+                OnBeforeModify?.Invoke(this, this);
+                ECDatabaseConnection.Connection.Modify(this);
+                if (records.Count > 0)
+                { 
+                    records[curRecIdx].CopyFrom(this);
+                }
+                OnAfterModify?.Invoke(this, this);
+            }            
         }
 
         /// <summary>
@@ -520,11 +530,19 @@ namespace ECDatabaseEngine
         /// </summary>
         public void ModifyAll()
         {            
+            records[curRecIdx].CopyFrom(this);
             for (int i = 0; i < records.Count; i++)
             {
-                ECDatabaseConnection.Connection.Modify(records[i]);
-            }
-            records[curRecIdx].CopyFrom(this);
+                if (records[i].RecId == -1)
+                {
+                    this.Insert();
+                }
+                else
+                {
+                    records[i].Modify();
+                    //ECDatabaseConnection.Connection.Modify(records[i]);
+                }
+        }            
         }
 
         /// <summary>
@@ -581,7 +599,7 @@ namespace ECDatabaseEngine
         public void CopyFrom(ECTable _table, bool _invokeOnChangeEvent = true)
         {
             PropertyInfo targetPi;
-            foreach (PropertyInfo sourcePi in _table.GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute))))
+            foreach (PropertyInfo sourcePi in _table.GetType().GetProperties().Where(x => x.IsDefined(typeof(ECTableFieldAttribute))))
                 if ((targetPi = GetType().GetProperty(sourcePi.Name)) != null)
                     targetPi.SetValue(this, sourcePi.GetValue(_table));
 
@@ -615,8 +633,8 @@ namespace ECDatabaseEngine
         internal string GetValueInSqlFormat(PropertyInfo _p)
         {
             string sql = "";
-            TableFieldAttribute tfa = this.GetType().GetCustomAttribute<TableFieldAttribute>();
-            tfa = _p.GetCustomAttribute<TableFieldAttribute>();
+            ECTableFieldAttribute tfa = this.GetType().GetCustomAttribute<ECTableFieldAttribute>();
+            tfa = _p.GetCustomAttribute<ECTableFieldAttribute>();
             if (tfa.type == FieldType.VARCHAR || tfa.type == FieldType.CHAR || tfa.type == FieldType.TEXT)
                 sql += "'" + _p.GetValue(this).ToString() + "'";
             else if (tfa.type == FieldType.INT || tfa.type == FieldType.DECIMAL || tfa.type == FieldType.FLOAT || tfa.type == FieldType.DOUBLE)
@@ -643,7 +661,7 @@ namespace ECDatabaseEngine
 
         internal void ConvertAndStore(PropertyInfo _p, string value)
         {
-            TableFieldAttribute tfa = _p.GetCustomAttribute<TableFieldAttribute>();
+            ECTableFieldAttribute tfa = _p.GetCustomAttribute<ECTableFieldAttribute>();
             string[] date, time;
 
             switch (tfa.type)
@@ -859,7 +877,7 @@ namespace ECDatabaseEngine
         {
             string ret = "";
 
-            foreach (PropertyInfo p in this.GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute))))
+            foreach (PropertyInfo p in this.GetType().GetProperties().Where(x => x.IsDefined(typeof(ECTableFieldAttribute))))
                 ret += p.Name + ": " + p.GetValue(this) + " \n";
 
             return ret.Substring(0, ret.Length - 2);
@@ -876,5 +894,5 @@ namespace ECDatabaseEngine
             }
         }
 
-    }
+    }   
 }

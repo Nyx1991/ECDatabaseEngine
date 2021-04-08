@@ -8,26 +8,26 @@ using System.Reflection;
 namespace ECDatabaseEngine
 {
     [AttributeUsage(AttributeTargets.Property)]
-    public class PrimaryKeyAttribute : Attribute
+    public class ECPrimaryKeyAttribute : Attribute
     {
     }
 
     [AttributeUsage(AttributeTargets.Property)]
-    public class NotNullAttribute : Attribute
+    public class ECNotNullAttribute : Attribute
     {
     }
 
     [AttributeUsage(AttributeTargets.Property)]
-    internal class AutoIncrementAttribute : Attribute
+    internal class ECAutoIncrementAttribute : Attribute
     {
     }    
 
     [AttributeUsage(AttributeTargets.Property)]
-    public class TableFieldAttribute : Attribute
+    public class ECTableFieldAttribute : Attribute
     {
         public FieldType type;
         public int length = 0;
-        public TableFieldAttribute(FieldType t)
+        public ECTableFieldAttribute(FieldType t)
         {
             if(t == FieldType.VARCHAR)
             {
@@ -37,7 +37,7 @@ namespace ECDatabaseEngine
             length = 0;
         }
 
-        public TableFieldAttribute(FieldType t, int l)
+        public ECTableFieldAttribute(FieldType t, int l)
         {
             type = t;
             length = l;        

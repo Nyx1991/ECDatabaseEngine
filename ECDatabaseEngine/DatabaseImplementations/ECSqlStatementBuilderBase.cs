@@ -32,7 +32,7 @@ namespace ECDatabaseEngine
             else
                 ret = "";
 
-            foreach (PropertyInfo p in _table.GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute))))
+            foreach (PropertyInfo p in _table.GetType().GetProperties().Where(x => x.IsDefined(typeof(ECTableFieldAttribute))))
             {
                 ret += GetSqlTableName(_table) + "." + p.Name + " AS '" + _table.TableName + "." + p.Name + "',";
             }

@@ -13,7 +13,7 @@ namespace ECDatabaseWinFormsExtension
     public static class DataGridViewExtension
     {
         private static Dictionary<string, ECTable> dataGridViewsWithECTableBinding;
-        const string mappingColNameConst = "Buffer_Idx";
+        const string mappingColNameConst = "Buffer;Idx";
 
         static DataGridViewExtension()
         {
@@ -49,8 +49,8 @@ namespace ECDatabaseWinFormsExtension
                                            bool _writeBufferIdxMapping,
                                            params string[] _fields)
         {
-            string key = $"{_dgv.Tag}_{_table.TableName}";
-            string mappingColName = $"{ _table.TableName }_{mappingColNameConst}";
+            string key = $"{_dgv.Tag};{_table.TableName}";
+            string mappingColName = $"{ _table.TableName };{mappingColNameConst}";
             bool isJoindTable = (_table.IsJoined);
 
             DataGridViewRow row;
@@ -61,14 +61,15 @@ namespace ECDatabaseWinFormsExtension
                 _dgv.Columns.Clear();
             }
 
-            foreach (PropertyInfo p in _table.GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute))))
+            foreach (PropertyInfo p in _table.GetType().GetProperties().Where(x => x.IsDefined(typeof(ECTableFieldAttribute))))
             {
-                _dgv.Columns.Add(String.Format("{0}_{1}", _table.TableName, p.Name), p.Name);                
+                int columnId = _dgv.Columns.Add(String.Format("{0};{1}", _table.TableName, p.Name), p.Name);
+                _dgv.Columns[columnId].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;                
             }
 
             //Add Column for BufferIdx- <=> RowIdx-Mapping            
             mappingCol = _dgv.Columns[_dgv.Columns.Add(mappingColName, "")];
-            mappingCol.Visible = false;
+            mappingCol.Visible = false;            
 
             if (_table.Count == 0)
                 _table.FindSet(false);
@@ -87,9 +88,9 @@ namespace ECDatabaseWinFormsExtension
                 }
 
                 List<object> data = new List<object>();
-                foreach (PropertyInfo p in t.GetType().GetProperties().Where(x => x.IsDefined(typeof(TableFieldAttribute))))
+                foreach (PropertyInfo p in t.GetType().GetProperties().Where(x => x.IsDefined(typeof(ECTableFieldAttribute))))
                 {                    
-                    string colName = String.Format("{0}_{1}", t.TableName, p.Name);
+                    string colName = String.Format("{0};{1}", t.TableName, p.Name);
                     DataGridViewCell cell = row.Cells[_dgv.Columns[colName].Index];                    
                     cell.Value = p.GetValue(t);                    
                     if (isJoindTable)
@@ -120,7 +121,7 @@ namespace ECDatabaseWinFormsExtension
             {
                 foreach (string s in _fields)
                 {
-                    DataGridViewColumn c = _dgv.Columns[String.Format("{0}_{1}", _table.TableName, s)];
+                    DataGridViewColumn c = _dgv.Columns[String.Format("{0};{1}", _table.TableName, s)];
                     if (c != null)
                     {
                         c.Visible = false;
@@ -131,8 +132,8 @@ namespace ECDatabaseWinFormsExtension
             {
                 foreach (DataGridViewColumn c in _dgv.Columns)
                 {
-                    string fieldName = c.Name.Replace(String.Format("{0}_", _table.TableName), "");
-                    if (c.Name.Contains(_table.TableName + "_") && !_fields.Contains(fieldName))
+                    string fieldName = c.Name.Replace(String.Format("{0};", _table.TableName), "");
+                    if (c.Name.Contains(_table.TableName + ";") && !_fields.Contains(fieldName))
                     {
                         c.Visible = false;
                     }
@@ -162,8 +163,8 @@ namespace ECDatabaseWinFormsExtension
                 throw new ECDataGridTagPropertyInUse(_dgv);
             }
 
-            string key = $"{_dgv.Tag}_{_table.TableName}";
-            string mappingColName = $"{ _table.TableName }_{mappingColNameConst}";
+            string key = $"{_dgv.Tag};{_table.TableName}";
+            string mappingColName = $"{ _table.TableName };{mappingColNameConst}";
 
             if (dataGridViewsWithECTableBinding.ContainsKey(key))
             {
@@ -184,6 +185,22 @@ namespace ECDatabaseWinFormsExtension
                 _dgv.AddDataFromECTable(_callerTable, _ff, true, _fields);
             };
 
+            _table.OnAfterModify += delegate (object sender, ECTable _callerTable)
+            {                
+                foreach (PropertyInfo p in _table.GetType().GetProperties().Where(x => x.IsDefined(typeof(ECTableFieldAttribute))))
+                {
+                    string colName = $"{ _callerTable.TableName };{p.Name}";
+                    string value = p.GetValue(_callerTable).ToString();
+                    int currentBufferIdx = _table.GetCurentBufferIndex();
+                    DataGridViewRow[] rows = new DataGridViewRow[_dgv.Rows.Count];
+                    _dgv.Rows.CopyTo(rows, 0);
+                    
+                    DataGridViewRow row = rows.First(x => (int)x.Cells[mappingColName].Value == currentBufferIdx);
+
+                    row.Cells[colName].Value = value;
+                }
+            };
+
             _dgv.CellEnter += delegate (object sender, DataGridViewCellEventArgs e)
             {
                 _dgv.Rows[e.RowIndex].Selected = _dgv.Rows[e.RowIndex].Cells[e.ColumnIndex].Selected;                
@@ -196,15 +213,18 @@ namespace ECDatabaseWinFormsExtension
             {
                 PropertyInfo p;
                 string colName = _dgv.Columns[e.ColumnIndex].Name;
-                string fieldName = colName.Substring(colName.IndexOf('_') + 1);
+                string fieldName = colName.Substring(colName.IndexOf(';') + 1);
 
                 //_table.SetCurrentBufferIndex(Convert.ToInt32(_dgv.Rows[e.RowIndex].Cells[mappingColName].Value));
                 p = _table.GetType().GetProperty(fieldName);
                 Object valueString = _dgv.Rows[e.RowIndex].Cells[e.ColumnIndex].Value;
+                if (valueString == null)
+                    valueString = "";
+
                 Object valueWithCorrectType = Convert.ChangeType(valueString, p.GetValue(_table).GetType());
                 p.SetValue(_table, valueWithCorrectType);
-            };
-            
+            };           
+
             _dgv.Disposed += delegate (object sender, EventArgs a)
             {
                 dataGridViewsWithECTableBinding.Remove(_dgv.Tag.ToString());
@@ -223,7 +243,7 @@ namespace ECDatabaseWinFormsExtension
 
             foreach (DataGridViewRow r in _dgv.SelectedRows)
             {
-                string cellName = String.Format("{0}_{1}", _table.TableName, nameof(_table.RecId));
+                string cellName = String.Format("{0};{1}", _table.TableName, nameof(_table.RecId));
                 object recId = r.Cells[cellName].Value;
                 filter += r.Cells[cellName].Value + "|";
             }
