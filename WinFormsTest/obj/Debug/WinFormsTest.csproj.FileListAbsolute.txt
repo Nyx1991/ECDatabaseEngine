@@ -46,3 +46,27 @@ C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\WinFormsTes
 C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\WinFormsTest\obj\Debug\WinFormsTest.csproj.CopyComplete
 C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\WinFormsTest\obj\Debug\WinFormsTest.exe
 C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\WinFormsTest\obj\Debug\WinFormsTest.pdb
+F:\VisualStudio\Projects\ECDatabaseEngine\WinFormsTest\bin\Debug\x86\sqlite3.dll
+F:\VisualStudio\Projects\ECDatabaseEngine\WinFormsTest\bin\Debug\x64\sqlite3.dll
+F:\VisualStudio\Projects\ECDatabaseEngine\WinFormsTest\bin\Debug\WinFormsTest.exe.config
+F:\VisualStudio\Projects\ECDatabaseEngine\WinFormsTest\bin\Debug\WinFormsTest.exe
+F:\VisualStudio\Projects\ECDatabaseEngine\WinFormsTest\bin\Debug\WinFormsTest.pdb
+F:\VisualStudio\Projects\ECDatabaseEngine\WinFormsTest\bin\Debug\ECDatabaseEngine.dll
+F:\VisualStudio\Projects\ECDatabaseEngine\WinFormsTest\bin\Debug\ECDatabaseWinFormsExtension.dll
+F:\VisualStudio\Projects\ECDatabaseEngine\WinFormsTest\bin\Debug\System.Data.SQLite.dll
+F:\VisualStudio\Projects\ECDatabaseEngine\WinFormsTest\bin\Debug\MySql.Data.dll
+F:\VisualStudio\Projects\ECDatabaseEngine\WinFormsTest\bin\Debug\ECDatabaseEngine.pdb
+F:\VisualStudio\Projects\ECDatabaseEngine\WinFormsTest\bin\Debug\ECDatabaseEngine.xml
+F:\VisualStudio\Projects\ECDatabaseEngine\WinFormsTest\bin\Debug\ECDatabaseEngine.dll.config
+F:\VisualStudio\Projects\ECDatabaseEngine\WinFormsTest\bin\Debug\ECDatabaseWinFormsExtension.pdb
+F:\VisualStudio\Projects\ECDatabaseEngine\WinFormsTest\bin\Debug\System.Data.SQLite.xml
+F:\VisualStudio\Projects\ECDatabaseEngine\WinFormsTest\bin\Debug\System.Data.SQLite.dll.config
+F:\VisualStudio\Projects\ECDatabaseEngine\WinFormsTest\bin\Debug\MySql.Data.xml
+F:\VisualStudio\Projects\ECDatabaseEngine\WinFormsTest\obj\Debug\WinFormsTest.csproj.AssemblyReference.cache
+F:\VisualStudio\Projects\ECDatabaseEngine\WinFormsTest\obj\Debug\WinFormsTest.Form1.resources
+F:\VisualStudio\Projects\ECDatabaseEngine\WinFormsTest\obj\Debug\WinFormsTest.Properties.Resources.resources
+F:\VisualStudio\Projects\ECDatabaseEngine\WinFormsTest\obj\Debug\WinFormsTest.csproj.GenerateResource.cache
+F:\VisualStudio\Projects\ECDatabaseEngine\WinFormsTest\obj\Debug\WinFormsTest.csproj.CoreCompileInputs.cache
+F:\VisualStudio\Projects\ECDatabaseEngine\WinFormsTest\obj\Debug\WinFormsTest.csproj.CopyComplete
+F:\VisualStudio\Projects\ECDatabaseEngine\WinFormsTest\obj\Debug\WinFormsTest.exe
+F:\VisualStudio\Projects\ECDatabaseEngine\WinFormsTest\obj\Debug\WinFormsTest.pdb

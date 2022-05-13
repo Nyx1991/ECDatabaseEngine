@@ -30,3 +30,19 @@ C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseW
 C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\obj\Debug\ECDatabaseWinFormsExtension.csproj.CopyComplete
 C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\obj\Debug\ECDatabaseWinFormsExtension.dll
 C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\obj\Debug\ECDatabaseWinFormsExtension.pdb
+F:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\bin\Debug\ECDatabaseWinFormsExtension.dll
+F:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\bin\Debug\ECDatabaseWinFormsExtension.pdb
+F:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\bin\Debug\ECDatabaseEngine.dll
+F:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\bin\Debug\MySql.Data.dll
+F:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\bin\Debug\System.Data.SQLite.dll
+F:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\bin\Debug\ECDatabaseEngine.pdb
+F:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\bin\Debug\ECDatabaseEngine.xml
+F:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\bin\Debug\ECDatabaseEngine.dll.config
+F:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\bin\Debug\MySql.Data.xml
+F:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\bin\Debug\System.Data.SQLite.xml
+F:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\bin\Debug\System.Data.SQLite.dll.config
+F:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\obj\Debug\ECDatabaseWinFormsExtension.csproj.AssemblyReference.cache
+F:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\obj\Debug\ECDatabaseWinFormsExtension.csproj.CoreCompileInputs.cache
+F:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\obj\Debug\ECDatabaseWinFormsExtension.csproj.CopyComplete
+F:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\obj\Debug\ECDatabaseWinFormsExtension.dll
+F:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseWinFormsExtension\obj\Debug\ECDatabaseWinFormsExtension.pdb

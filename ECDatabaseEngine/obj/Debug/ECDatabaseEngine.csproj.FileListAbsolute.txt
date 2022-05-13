@@ -42,3 +42,25 @@ C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseE
 C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseEngine\obj\Debug\ECDatabaseEngine.dll
 C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ECDatabaseEngine\obj\Debug\ECDatabaseEngine.pdb
 E:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\obj\Debug\ECDatabaseEngine.csprojAssemblyReference.cache
+F:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\ECDatabaseEngine.dll.config
+F:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\ECDatabaseEngine.xml
+F:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\ECDatabaseEngine.dll
+F:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\ECDatabaseEngine.pdb
+F:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\EntityFramework.dll
+F:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\EntityFramework.SqlServer.dll
+F:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\MySql.Data.dll
+F:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\System.Data.SQLite.dll
+F:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\System.Data.SQLite.EF6.dll
+F:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\System.Data.SQLite.Linq.dll
+F:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\EntityFramework.xml
+F:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\EntityFramework.SqlServer.xml
+F:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\MySql.Data.xml
+F:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\System.Data.SQLite.xml
+F:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\bin\Debug\System.Data.SQLite.dll.config
+F:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\obj\Debug\ECDatabaseEngine.csproj.AssemblyReference.cache
+F:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\obj\Debug\ECDatabaseEngine.LibResource.resources
+F:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\obj\Debug\ECDatabaseEngine.csproj.GenerateResource.cache
+F:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\obj\Debug\ECDatabaseEngine.csproj.CoreCompileInputs.cache
+F:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\obj\Debug\ECDatabaseEngine.csproj.CopyComplete
+F:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\obj\Debug\ECDatabaseEngine.dll
+F:\VisualStudio\Projects\ECDatabaseEngine\ECDatabaseEngine\obj\Debug\ECDatabaseEngine.pdb

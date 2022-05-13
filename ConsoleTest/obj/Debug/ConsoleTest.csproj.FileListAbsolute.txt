@@ -48,3 +48,28 @@ C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ConsoleTest
 C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ConsoleTest\obj\Debug\ConsoleTest.csproj.CopyComplete
 C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ConsoleTest\obj\Debug\ConsoleTest.exe
 C:\Users\Alex\Documents\Visual Studio 2017\Projects\ECDatabaseEngine\ConsoleTest\obj\Debug\ConsoleTest.pdb
+F:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Debug\ConsoleTest.exe.config
+F:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Debug\ConsoleTest.exe
+F:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Debug\ConsoleTest.pdb
+F:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Debug\ECDatabaseEngine.dll
+F:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Debug\EntityFramework.dll
+F:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Debug\EntityFramework.SqlServer.dll
+F:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Debug\System.Data.SQLite.dll
+F:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Debug\System.Data.SQLite.EF6.dll
+F:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Debug\System.Data.SQLite.Linq.dll
+F:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Debug\MySql.Data.dll
+F:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Debug\ECDatabaseEngine.pdb
+F:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Debug\ECDatabaseEngine.xml
+F:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Debug\ECDatabaseEngine.dll.config
+F:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Debug\EntityFramework.xml
+F:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Debug\EntityFramework.SqlServer.xml
+F:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Debug\System.Data.SQLite.xml
+F:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Debug\System.Data.SQLite.dll.config
+F:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\bin\Debug\MySql.Data.xml
+F:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\obj\Debug\ConsoleTest.csproj.AssemblyReference.cache
+F:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\obj\Debug\ConsoleTest.AppRessource.resources
+F:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\obj\Debug\ConsoleTest.csproj.GenerateResource.cache
+F:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\obj\Debug\ConsoleTest.csproj.CoreCompileInputs.cache
+F:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\obj\Debug\ConsoleTest.csproj.CopyComplete
+F:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\obj\Debug\ConsoleTest.exe
+F:\VisualStudio\Projects\ECDatabaseEngine\ConsoleTest\obj\Debug\ConsoleTest.pdb
